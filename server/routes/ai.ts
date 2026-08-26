@@ -2,7 +2,7 @@ import { Router } from 'express';
 import db, { uuidv4 } from '../db';
 import { authMiddleware, AuthRequest } from '../auth';
 import { generateOptimalTeam } from '../ai/teamBuilder';
-import { FORMATIONS, Formation } from '../../src/types';
+import { FORMATIONS, Formation } from '../types';
 
 const router = Router();
 

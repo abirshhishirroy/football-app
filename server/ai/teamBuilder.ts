@@ -1,4 +1,4 @@
-import { Position, PlayingStyle, SkillRatings } from '../../src/types';
+import { Position, PlayingStyle, SkillRatings } from '../types';
 
 interface PlayerInput {
   id: string;

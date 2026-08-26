@@ -20,4 +20,4 @@ COPY --from=builder /app/package.json ./
 COPY --from=builder /app/server ./server
 
 EXPOSE 3001
-CMD ["node", "--import", "tsx", "server/index.ts"]
+CMD ["npm", "start"]
