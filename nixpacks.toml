@@ -2,10 +2,10 @@
 nixPkgs = ["nodejs_20", "python3"]
 
 [phases.install]
-cmds = ["npm ci"]
+cmds = ["npm ci --include=dev"]
 
 [phases.build]
 cmds = ["npm run build"]
 
 [start]
-cmd = "npm start"
+cmd = "npm prune --omit=dev && npm start"
