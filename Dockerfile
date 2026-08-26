@@ -17,6 +17,7 @@ COPY package.json package-lock.json ./
 RUN npm ci --omit=dev
 COPY --from=builder /app/dist ./dist
 COPY server ./server
+COPY tsconfig.json tsconfig.app.json tsconfig.node.json ./
 
 EXPOSE 3001
-CMD ["npm", "start"]
+CMD ["node", "--import", "tsx", "server/index.ts"]
