@@ -30,5 +30,15 @@ app.get('/{*splat}', (_req, res) => {
 });
 
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Server running on http://0.0.0.0:${PORT}`);
+  console.log(`[startup] Server running on http://0.0.0.0:${PORT} (PORT=${PORT})`);
+  console.log(`[startup] Serving static from ${distPath}`);
+});
+
+process.on('uncaughtException', (err) => {
+  console.error('[startup] uncaughtException:', err);
+  process.exit(1);
+});
+
+process.on('unhandledRejection', (reason) => {
+  console.error('[startup] unhandledRejection:', reason);
 });
