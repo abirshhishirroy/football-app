@@ -34,7 +34,7 @@ export function adminMiddleware(req: AuthRequest, res: Response, next: NextFunct
   next();
 }
 
-export function registerUser(email: string, password: string, name: string, role: string = 'coach') {
+export function registerUser(email: string, password: string, name: string, role: string = 'player') {
   const existing = db.prepare('SELECT id FROM users WHERE email = ?').get(email);
   if (existing) {
     throw new Error('Email already registered');

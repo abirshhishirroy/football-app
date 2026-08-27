@@ -1,9 +1,12 @@
 import { useEffect, useState } from 'react';
 import { api } from '../api/client';
+import { useAuth } from '../context/AuthContext';
 import { PlayerCard } from '../components/PlayerCard';
 import { PlayerForm } from '../components/PlayerForm';
 
 export function Players() {
+  const { user } = useAuth();
+  const isAdmin = user?.role === 'admin';
   const [players, setPlayers] = useState<any[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<any>(null);
@@ -46,12 +49,14 @@ export function Players() {
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <h1 className="text-3xl font-black">Players</h1>
-        <button
-          onClick={() => { setShowForm(!showForm); setEditing(null); }}
-          className="bg-green-600 hover:bg-green-700 text-white font-semibold px-5 py-2 rounded-lg transition-colors"
-        >
-          {showForm ? 'Cancel' : '+ Add Player'}
-        </button>
+        {isAdmin && (
+          <button
+            onClick={() => { setShowForm(!showForm); setEditing(null); }}
+            className="bg-green-600 hover:bg-green-700 text-white font-semibold px-5 py-2 rounded-lg transition-colors"
+          >
+            {showForm ? 'Cancel' : '+ Add Player'}
+          </button>
+        )}
       </div>
 
       {(showForm || editing) && (
@@ -88,20 +93,22 @@ export function Players() {
               onClick={() => setSelectedId(selectedId === player.id ? null : player.id)}
               selected={selectedId === player.id}
             />
-            <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 flex gap-1 transition-opacity">
-              <button
-                onClick={(e) => { e.stopPropagation(); setEditing(player); setShowForm(false); }}
-                className="bg-blue-600 hover:bg-blue-700 text-white text-xs px-2 py-1 rounded"
-              >
-                Edit
-              </button>
-              <button
-                onClick={(e) => { e.stopPropagation(); handleDelete(player.id); }}
-                className="bg-red-600 hover:bg-red-700 text-white text-xs px-2 py-1 rounded"
-              >
-                Del
-              </button>
-            </div>
+            {isAdmin && (
+              <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 flex gap-1 transition-opacity">
+                <button
+                  onClick={(e) => { e.stopPropagation(); setEditing(player); setShowForm(false); }}
+                  className="bg-blue-600 hover:bg-blue-700 text-white text-xs px-2 py-1 rounded"
+                >
+                  Edit
+                </button>
+                <button
+                  onClick={(e) => { e.stopPropagation(); handleDelete(player.id); }}
+                  className="bg-red-600 hover:bg-red-700 text-white text-xs px-2 py-1 rounded"
+                >
+                  Del
+                </button>
+              </div>
+            )}
           </div>
         ))}
       </div>

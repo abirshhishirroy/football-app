@@ -152,30 +152,25 @@ function MatchCard({ match, currentUser, onRefresh }: { match: any; currentUser:
   const [loading, setLoading] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState('');
+  const [confirming, setConfirming] = useState(false);
+  const [showResultForm, setShowResultForm] = useState(false);
+  const [resultWinner, setResultWinner] = useState<'A' | 'B' | 'draw'>('A');
+  const [resultScoreA, setResultScoreA] = useState(0);
+  const [resultScoreB, setResultScoreB] = useState(0);
+  const [resultScorers, setResultScorers] = useState<{ playerId: string; team: 'A' | 'B'; isGoal: boolean; minute: number | null }[]>([]);
+  const [players, setPlayers] = useState<any[]>([]);
 
   const isSignedUp = match.signups?.some((s: any) => s.userId === currentUser?.id);
   const matchDate = new Date(match.matchDate);
   const isPast = matchDate < new Date();
   const isAdmin = currentUser?.role === 'admin';
+  const closed = match.signupClosed || match.status !== 'upcoming' || isPast;
 
   const handleSignup = async () => {
     setLoading(true);
     setError('');
     try {
       await api.signupMatch(match.id);
-      onRefresh();
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleLeave = async () => {
-    setLoading(true);
-    setError('');
-    try {
-      await api.leaveMatch(match.id);
       onRefresh();
     } catch (err: any) {
       setError(err.message);
@@ -210,6 +205,30 @@ function MatchCard({ match, currentUser, onRefresh }: { match: any; currentUser:
     }
   };
 
+  const handleResult = async () => {
+    setLoading(true);
+    setError('');
+    try {
+      await api.submitMatchResult(match.id, {
+        winner: resultWinner === 'draw' ? null : resultWinner,
+        scoreA: resultScoreA,
+        scoreB: resultScoreB,
+        scorers: resultScorers,
+      });
+      setShowResultForm(false);
+      onRefresh();
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const openResultForm = () => {
+    api.getPlayers().then(setPlayers);
+    setShowResultForm(true);
+  };
+
   const statusColors: Record<string, string> = {
     upcoming: 'bg-green-500/20 text-green-400',
     full: 'bg-yellow-500/20 text-yellow-400',
@@ -238,8 +257,12 @@ function MatchCard({ match, currentUser, onRefresh }: { match: any; currentUser:
             {match.description && <p className="text-sm text-gray-500 mt-1">{match.description}</p>}
           </div>
           <div className="text-right">
-            <div className="text-2xl font-black text-green-400">{match.signupCount}</div>
-            <p className="text-xs text-gray-400">players joined</p>
+            {match.status === 'completed' && match.scoreA != null && match.scoreB != null ? (
+              <div className="text-2xl font-black text-green-400">{match.scoreA} - {match.scoreB}</div>
+            ) : (
+              <div className="text-2xl font-black text-green-400">{match.signupCount}</div>
+            )}
+            <p className="text-xs text-gray-400">{match.status === 'completed' ? (match.winner === 'draw' ? 'Draw' : match.winner ? `Team ${match.winner} won` : 'completed') : 'players joined'}</p>
           </div>
         </div>
 
@@ -259,21 +282,41 @@ function MatchCard({ match, currentUser, onRefresh }: { match: any; currentUser:
           </div>
         )}
 
+        {match.scorers && match.scorers.length > 0 && (
+          <div className="bg-gray-800/50 rounded-lg p-2 mb-3 space-y-0.5">
+            {match.scorers.map((s: any) => (
+              <div key={s.id} className="text-xs text-gray-300">
+                {s.isGoal ? '⚽' : '🅰️'} {s.playerName} {s.minute != null && `(${s.minute}')`} — Team {s.team}
+              </div>
+            ))}
+          </div>
+        )}
+
         {error && <div className="bg-red-500/10 border border-red-500 text-red-400 px-3 py-1.5 rounded-lg text-xs mb-3">{error}</div>}
 
         <div className="flex flex-wrap gap-2">
           {match.status === 'upcoming' && !isPast && (
             <>
               {!isSignedUp ? (
-                <button onClick={handleSignup} disabled={loading}
-                  className="bg-green-600 hover:bg-green-700 disabled:bg-green-800 text-white font-semibold px-4 py-2 rounded-lg text-sm transition-colors">
-                  {loading ? 'Joining...' : '✅ Yes, I\'ll Play!'}
-                </button>
+                confirming ? (
+                  <div className="flex gap-1">
+                    <button onClick={() => { handleSignup(); setConfirming(false); }} disabled={loading}
+                      className="bg-green-600 hover:bg-green-700 disabled:bg-green-800 text-white font-semibold px-4 py-2 rounded-lg text-sm transition-colors">
+                      {loading ? 'Joining...' : 'Yes, I\'m Playing!'}
+                    </button>
+                    <button onClick={() => setConfirming(false)}
+                      className="bg-gray-700 hover:bg-gray-600 text-gray-300 px-4 py-2 rounded-lg text-sm transition-colors">
+                      Cancel
+                    </button>
+                  </div>
+                ) : (
+                  <button onClick={() => setConfirming(true)} disabled={closed}
+                    className="bg-green-600 hover:bg-green-700 disabled:bg-gray-700 disabled:text-gray-500 text-white font-semibold px-4 py-2 rounded-lg text-sm transition-colors">
+                    {closed ? 'Signup Closed' : '✅ Yes, I\'ll Play!'}
+                  </button>
+                )
               ) : (
-                <button onClick={handleLeave} disabled={loading}
-                  className="bg-red-600/20 hover:bg-red-600 text-red-400 font-semibold px-4 py-2 rounded-lg text-sm transition-colors border border-red-500/30">
-                  {loading ? 'Leaving...' : '❌ Leave Match'}
-                </button>
+                <span className="text-green-400 text-sm font-bold">✓ Playing</span>
               )}
               {isAdmin && (
                 <button onClick={handleGenerate} disabled={generating || match.signupCount < 2}
@@ -282,6 +325,12 @@ function MatchCard({ match, currentUser, onRefresh }: { match: any; currentUser:
                 </button>
               )}
             </>
+          )}
+          {isAdmin && match.status === 'full' && (
+            <button onClick={openResultForm}
+              className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded-lg text-sm transition-colors">
+              📝 Enter Result
+            </button>
           )}
           {isAdmin && (
             <button onClick={handleDelete} disabled={loading}
@@ -325,6 +374,75 @@ function MatchCard({ match, currentUser, onRefresh }: { match: any; currentUser:
                   );
                 })}
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showResultForm && (
+        <div className="border-t border-gray-700 p-5 bg-gray-800/30">
+          <h3 className="text-sm font-bold text-blue-400 mb-3">📝 Enter Match Result</h3>
+          <div className="space-y-3">
+            <div className="grid grid-cols-3 gap-3">
+              <div>
+                <label className="block text-xs text-gray-400 mb-1">Winner</label>
+                <select value={resultWinner} onChange={(e) => setResultWinner(e.target.value as 'A' | 'B' | 'draw')} className="w-full bg-gray-800 border border-gray-600 rounded px-2 py-1.5 text-white text-sm">
+                  <option value="A">Team A</option>
+                  <option value="B">Team B</option>
+                  <option value="draw">Draw</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs text-gray-400 mb-1">Team A Score</label>
+                <input type="number" value={resultScoreA} onChange={(e) => setResultScoreA(+e.target.value)} min={0} className="w-full bg-gray-800 border border-gray-600 rounded px-2 py-1.5 text-white text-sm" />
+              </div>
+              <div>
+                <label className="block text-xs text-gray-400 mb-1">Team B Score</label>
+                <input type="number" value={resultScoreB} onChange={(e) => setResultScoreB(+e.target.value)} min={0} className="w-full bg-gray-800 border border-gray-600 rounded px-2 py-1.5 text-white text-sm" />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs text-gray-400 mb-1">Goals & Assists</label>
+              {resultScorers.map((s, i) => (
+                <div key={i} className="flex gap-2 mb-1">
+                  <select value={s.playerId} onChange={(e) => {
+                    const next = [...resultScorers]; next[i] = { ...next[i], playerId: e.target.value }; setResultScorers(next);
+                  }} className="flex-1 bg-gray-800 border border-gray-600 rounded px-2 py-1 text-white text-xs">
+                    <option value="">Select player</option>
+                    {players.map((p: any) => <option key={p.id} value={p.id}>{p.name}</option>)}
+                  </select>
+                  <select value={s.team} onChange={(e) => {
+                    const next = [...resultScorers]; next[i] = { ...next[i], team: e.target.value as 'A' | 'B' }; setResultScorers(next);
+                  }} className="w-16 bg-gray-800 border border-gray-600 rounded px-2 py-1 text-white text-xs">
+                    <option value="A">Team A</option>
+                    <option value="B">Team B</option>
+                  </select>
+                  <select value={s.isGoal ? 'goal' : 'assist'} onChange={(e) => {
+                    const next = [...resultScorers]; next[i] = { ...next[i], isGoal: e.target.value === 'goal' }; setResultScorers(next);
+                  }} className="w-20 bg-gray-800 border border-gray-600 rounded px-2 py-1 text-white text-xs">
+                    <option value="goal">Goal</option>
+                    <option value="assist">Assist</option>
+                  </select>
+                  <input type="number" value={s.minute ?? ''} onChange={(e) => {
+                    const next = [...resultScorers]; next[i] = { ...next[i], minute: e.target.value ? +e.target.value : null }; setResultScorers(next);
+                  }} placeholder="min" className="w-14 bg-gray-800 border border-gray-600 rounded px-2 py-1 text-white text-xs" />
+                  <button onClick={() => setResultScorers(resultScorers.filter((_, j) => j !== i))} className="text-red-400 hover:text-red-300 text-xs">✕</button>
+                </div>
+              ))}
+              <button onClick={() => setResultScorers([...resultScorers, { playerId: '', team: 'A', isGoal: true, minute: null }])}
+                className="text-xs text-green-400 hover:text-green-300 mt-1">+ Add entry</button>
+            </div>
+
+            <div className="flex gap-2">
+              <button onClick={handleResult} disabled={loading}
+                className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-800 text-white font-semibold px-4 py-1.5 rounded text-sm transition-colors">
+                {loading ? 'Saving...' : 'Save Result'}
+              </button>
+              <button onClick={() => setShowResultForm(false)}
+                className="bg-gray-700 hover:bg-gray-600 text-gray-300 px-4 py-1.5 rounded text-sm transition-colors">
+                Cancel
+              </button>
             </div>
           </div>
         </div>

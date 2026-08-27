@@ -145,6 +145,10 @@ class ApiClient {
     return this.request<any>(`/matches/${matchId}`, { method: 'DELETE' });
   }
 
+  async submitMatchResult(matchId: string, data: { winner: string | null; scoreA: number; scoreB: number; scorers: { playerId: string; team: 'A' | 'B'; isGoal: boolean; minute?: number | null }[] }) {
+    return this.request<any>(`/matches/${matchId}/result`, { method: 'POST', body: JSON.stringify(data) });
+  }
+
   logout() {
     this.setToken(null);
   }

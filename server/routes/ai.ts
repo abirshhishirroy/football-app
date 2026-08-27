@@ -1,12 +1,12 @@
 import { Router } from 'express';
 import db, { uuidv4 } from '../db';
-import { authMiddleware, AuthRequest } from '../auth';
+import { authMiddleware, adminMiddleware, AuthRequest } from '../auth';
 import { generateOptimalTeam } from '../ai/teamBuilder';
 import { FORMATIONS, Formation } from '../types';
 
 const router = Router();
 
-router.post('/generate', authMiddleware, (req: AuthRequest, res) => {
+router.post('/generate', authMiddleware, adminMiddleware, (req: AuthRequest, res) => {
   try {
     const { formation, teamName, playerIds } = req.body;
     if (!formation || !teamName) {

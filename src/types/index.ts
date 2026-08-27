@@ -38,11 +38,22 @@ export interface Player {
   playingStyle: PlayingStyle;
   weeklyActivity: number;
   skillRatings: SkillRatings;
+  pace: number;
+  shooting: number;
+  passing: number;
+  dribbling: number;
+  defending: number;
+  physical: number;
+  goalkeeping?: number;
   overall: number;
   avatarUrl?: string | null;
   userId?: string | null;
   createdBy: string;
   createdAt: string;
+  goals: number;
+  assists: number;
+  matchesPlayed: number;
+  wins: number;
 }
 
 export interface Team {
@@ -59,7 +70,37 @@ export interface User {
   id: string;
   email: string;
   name: string;
-  role: 'admin' | 'coach';
+  role: 'admin' | 'player';
+}
+
+export interface MatchScorer {
+  id: string;
+  matchId: string;
+  team: 'A' | 'B';
+  playerId: string;
+  isGoal: boolean;
+  minute: number | null;
+  playerName: string;
+}
+
+export interface Match {
+  id: string;
+  title: string;
+  matchDate: string;
+  description: string;
+  status: 'upcoming' | 'full' | 'cancelled' | 'completed';
+  formation: string;
+  winner: 'A' | 'B' | 'draw' | null;
+  scoreA: number | null;
+  scoreB: number | null;
+  createdBy: string;
+  createdAt: string;
+  signupDeadline: string;
+  signupClosed: boolean;
+  signups: any[];
+  signupCount: number;
+  teamData: any;
+  scorers: MatchScorer[];
 }
 
 export interface TeamWithPlayers extends Team {

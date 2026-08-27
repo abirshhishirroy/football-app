@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import db, { uuidv4 } from '../db';
-import { authMiddleware, AuthRequest } from '../auth';
+import { authMiddleware, adminMiddleware, AuthRequest } from '../auth';
 
 const router = Router();
 
@@ -28,7 +28,7 @@ router.get('/:id', authMiddleware, (req, res) => {
   res.json({ ...team, players, playerIds: players.map((p: any) => p.id) });
 });
 
-router.post('/', authMiddleware, (req: AuthRequest, res) => {
+router.post('/', authMiddleware, adminMiddleware, (req: AuthRequest, res) => {
   try {
     const { name, formation, playerAssignments } = req.body;
     if (!name || !formation || !playerAssignments) {
@@ -49,7 +49,7 @@ router.post('/', authMiddleware, (req: AuthRequest, res) => {
   }
 });
 
-router.delete('/:id', authMiddleware, (req, res) => {
+router.delete('/:id', authMiddleware, adminMiddleware, (req, res) => {
   const result = db.prepare('DELETE FROM teams WHERE id = ?').run(req.params.id);
   if (result.changes === 0) return res.status(404).json({ error: 'Team not found' });
   res.json({ success: true });

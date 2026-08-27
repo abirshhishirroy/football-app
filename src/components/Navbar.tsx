@@ -9,9 +9,18 @@ const NAV_ITEMS = [
   { path: '/notice', label: 'Notice Board' },
 ];
 
+const PLAYER_NAV_ITEMS = [
+  { path: '/', label: 'Dashboard' },
+  { path: '/players', label: 'Players' },
+  { path: '/notice', label: 'Notice Board' },
+  { path: '/profile', label: 'Profile' },
+];
+
 export function Navbar() {
   const { user, logout } = useAuth();
   const location = useLocation();
+  const isAdmin = user?.role === 'admin';
+  const items = isAdmin ? NAV_ITEMS : PLAYER_NAV_ITEMS;
 
   return (
     <nav className="bg-gray-900 border-b border-gray-700">
@@ -22,7 +31,7 @@ export function Navbar() {
               <span className="text-2xl">⚽</span> Football Manager
             </Link>
             <div className="hidden md:flex items-center gap-1">
-              {NAV_ITEMS.map((item) => (
+              {items.map((item) => (
                 <Link
                   key={item.path}
                   to={item.path}

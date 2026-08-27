@@ -14,13 +14,29 @@ const db = new Database(DB_PATH);
 db.pragma('journal_mode = WAL');
 db.pragma('foreign_keys = ON');
 
+function columnExists(table: string, column: string): boolean {
+  const cols = db.prepare(`PRAGMA table_info(${table})`).all() as any[];
+  return cols.some((c) => c.name === column);
+}
+
+function tableExists(table: string): boolean {
+  const row = db.prepare(`SELECT name FROM sqlite_master WHERE type='table' AND name=?`).get(table);
+  return !!row;
+}
+
+function hasOldRoleCheck(): boolean {
+  const row = db.prepare(`SELECT sql FROM sqlite_master WHERE type='table' AND name='users'`).get() as any;
+  return !!(row?.sql && /CHECK\(role IN \('admin', 'coach'\)\)/.test(row.sql));
+}
+
+// Base tables, created once. Existing databases keep their data.
 db.exec(`
   CREATE TABLE IF NOT EXISTS users (
     id TEXT PRIMARY KEY,
     email TEXT UNIQUE NOT NULL,
     password TEXT NOT NULL,
     name TEXT NOT NULL,
-    role TEXT NOT NULL DEFAULT 'coach' CHECK(role IN ('admin', 'coach')),
+    role TEXT NOT NULL DEFAULT 'player' CHECK(role IN ('admin', 'player')),
     createdAt TEXT NOT NULL DEFAULT (datetime('now'))
   );
 
@@ -97,11 +113,79 @@ db.exec(`
     generatedAt TEXT NOT NULL DEFAULT (datetime('now')),
     FOREIGN KEY (matchId) REFERENCES matches(id) ON DELETE CASCADE
   );
+
+  CREATE TABLE IF NOT EXISTS match_goal_scorers (
+    id TEXT PRIMARY KEY,
+    matchId TEXT NOT NULL,
+    team TEXT NOT NULL CHECK(team IN ('A', 'B')),
+    playerId TEXT NOT NULL,
+    isGoal INTEGER NOT NULL DEFAULT 1,
+    minute INTEGER,
+    createdAt TEXT NOT NULL DEFAULT (datetime('now')),
+    FOREIGN KEY (matchId) REFERENCES matches(id) ON DELETE CASCADE,
+    FOREIGN KEY (playerId) REFERENCES players(id) ON DELETE CASCADE
+  );
 `);
 
-const adminPassword = bcrypt.hashSync('admin123', 10);
-const existingAdmin = db.prepare('SELECT id FROM users WHERE email = ?').get('admin@football.com');
-if (!existingAdmin) {
+// --- Non-destructive migrations for pre-existing databases ---
+
+// Migrate the old 'users.role' CHECK constraint ('admin','coach') to ('admin','player').
+// SQLite cannot ALTER a CHECK, so rebuild the table while preserving all data.
+if (hasOldRoleCheck()) {
+  db.exec(`
+    CREATE TABLE users_new (
+      id TEXT PRIMARY KEY,
+      email TEXT UNIQUE NOT NULL,
+      password TEXT NOT NULL,
+      name TEXT NOT NULL,
+      role TEXT NOT NULL DEFAULT 'player' CHECK(role IN ('admin', 'player')),
+      createdAt TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+  `);
+  db.exec(`
+    INSERT INTO users_new (id, email, password, name, role, createdAt)
+      SELECT id, email, password, name,
+        CASE WHEN role = 'admin' THEN 'admin' ELSE 'player' END,
+        createdAt
+      FROM users;
+    DROP TABLE users;
+    ALTER TABLE users_new RENAME TO users;
+  `);
+}
+
+// Add player stat columns if missing (existing tables keep their data).
+if (tableExists('players')) {
+  for (const col of ['goals', 'assists', 'matchesPlayed', 'wins']) {
+    if (!columnExists('players', col)) {
+      db.prepare(`ALTER TABLE players ADD COLUMN ${col} INTEGER NOT NULL DEFAULT 0`).run();
+    }
+  }
+}
+
+// Add match result columns if missing.
+if (tableExists('matches')) {
+  if (!columnExists('matches', 'winner')) {
+    db.exec(`ALTER TABLE matches ADD COLUMN winner TEXT DEFAULT NULL`);
+  }
+  if (!columnExists('matches', 'scoreA')) {
+    db.exec(`ALTER TABLE matches ADD COLUMN scoreA INTEGER DEFAULT NULL`);
+  }
+  if (!columnExists('matches', 'scoreB')) {
+    db.exec(`ALTER TABLE matches ADD COLUMN scoreB INTEGER DEFAULT NULL`);
+  }
+  if (!columnExists('matches', 'completedAt')) {
+    db.exec(`ALTER TABLE matches ADD COLUMN completedAt TEXT DEFAULT NULL`);
+  }
+}
+
+// Ensure the admin seed exists and has role 'admin'.
+const seededAdmin = db.prepare('SELECT id, role FROM users WHERE email = ?').get('admin@football.com') as any;
+if (seededAdmin) {
+  if (seededAdmin.role !== 'admin') {
+    db.prepare("UPDATE users SET role = 'admin' WHERE email = ?").run('admin@football.com');
+  }
+} else {
+  const adminPassword = bcrypt.hashSync('admin123', 10);
   db.prepare('INSERT INTO users (id, email, password, name, role) VALUES (?, ?, ?, ?, ?)').run(
     uuidv4(), 'admin@football.com', adminPassword, 'Admin', 'admin'
   );

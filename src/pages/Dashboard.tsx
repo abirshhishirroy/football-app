@@ -40,18 +40,6 @@ export function Dashboard() {
     }
   };
 
-  const handleLeave = async (matchId: string) => {
-    setMatchAction(matchId);
-    try {
-      await api.leaveMatch(matchId);
-      load();
-    } catch (err: any) {
-      alert(err.message);
-    } finally {
-      setMatchAction(null);
-    }
-  };
-
   const upcomingMatches = matches.filter(m => m.status === 'upcoming' && new Date(m.matchDate) >= new Date());
   const recentMatches = matches.filter(m => m.status !== 'upcoming' || new Date(m.matchDate) < new Date());
 
@@ -86,7 +74,6 @@ export function Dashboard() {
                   match={match}
                   userId={user?.id}
                   onSignup={() => handleSignup(match.id)}
-                  onLeave={() => handleLeave(match.id)}
                   loading={matchAction === match.id}
                 />
               ))}
@@ -162,7 +149,6 @@ export function Dashboard() {
                 userId={user?.id}
                 isSignedUp={isSignedUp(match)}
                 onSignup={() => handleSignup(match.id)}
-                onLeave={() => handleLeave(match.id)}
                 loading={matchAction === match.id}
               />
             ))}
@@ -176,14 +162,29 @@ export function Dashboard() {
           <h2 className="text-xl font-bold mb-4 text-gray-400">Past Matches</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {recentMatches.slice(0, 4).map((match) => (
-              <div key={match.id} className="bg-gray-900/50 rounded-lg border border-gray-800 p-3 flex items-center justify-between opacity-70">
-                <div>
-                  <span className="text-sm font-medium">{match.title}</span>
-                  <span className="text-xs text-gray-500 ml-2">{new Date(match.matchDate).toLocaleDateString()}</span>
+              <div key={match.id} className="bg-gray-900/50 rounded-lg border border-gray-800 p-3">
+                <div className="flex items-center justify-between mb-1">
+                  <div>
+                    <span className="text-sm font-medium">{match.title}</span>
+                    <span className="text-xs text-gray-500 ml-2">{new Date(match.matchDate).toLocaleDateString()}</span>
+                  </div>
+                  <span className={`text-xs px-2 py-0.5 rounded ${match.status === 'completed' ? 'bg-blue-500/20 text-blue-400' : match.status === 'full' ? 'bg-yellow-500/20 text-yellow-400' : 'bg-gray-700 text-gray-400'}`}>
+                    {match.status}
+                  </span>
                 </div>
-                <span className={`text-xs px-2 py-0.5 rounded ${match.status === 'completed' ? 'bg-blue-500/20 text-blue-400' : match.status === 'full' ? 'bg-yellow-500/20 text-yellow-400' : 'bg-gray-700 text-gray-400'}`}>
-                  {match.status}
-                </span>
+                {match.status === 'completed' && match.scoreA != null && match.scoreB != null && (
+                  <div className="flex items-center gap-2 mt-1">
+                    <span className="text-sm font-bold text-green-400">{match.scoreA} - {match.scoreB}</span>
+                    <span className="text-[10px] text-gray-500">
+                      {match.winner === 'draw' ? 'Draw' : match.winner ? `Team ${match.winner} won` : ''}
+                    </span>
+                  </div>
+                )}
+                {match.scorers && match.scorers.length > 0 && (
+                  <div className="mt-1 text-[10px] text-gray-400">
+                    {match.scorers.filter((s: any) => s.isGoal).map((s: any) => `⚽ ${s.playerName}`).join(', ')}
+                  </div>
+                )}
               </div>
             ))}
           </div>
@@ -193,16 +194,18 @@ export function Dashboard() {
   );
 }
 
-function MatchNoticeCard({ match, userId, isSignedUp, onSignup, onLeave, loading }: {
+function MatchNoticeCard({ match, userId, isSignedUp, onSignup, loading }: {
   match: any;
   userId?: string;
   isSignedUp?: boolean;
   onSignup: () => void;
-  onLeave: () => void;
   loading: boolean;
 }) {
+  const [confirming, setConfirming] = useState(false);
   const matchDate = new Date(match.matchDate);
   const isSignedUpVal = isSignedUp ?? match.signups?.some((s: any) => s.userId === userId);
+  const closed = match.signupClosed || match.status !== 'upcoming' || matchDate < new Date();
+  const canSignup = !isSignedUpVal && !closed;
 
   return (
     <div className="bg-gray-900 rounded-xl border border-gray-700 p-4 hover:border-gray-600 transition-colors">
@@ -216,8 +219,12 @@ function MatchNoticeCard({ match, userId, isSignedUp, onSignup, onLeave, loading
           </p>
         </div>
         <div className="text-right">
-          <div className="text-lg font-black text-green-400">{match.signupCount}</div>
-          <div className="text-[10px] text-gray-500">joined</div>
+          {match.status === 'completed' && match.scoreA != null && match.scoreB != null ? (
+            <div className="text-lg font-black text-green-400">{match.scoreA} - {match.scoreB}</div>
+          ) : (
+            <div className="text-lg font-black text-green-400">{match.signupCount}</div>
+          )}
+          <div className="text-[10px] text-gray-500">{match.status === 'completed' ? (match.winner === 'draw' ? 'Draw' : match.winner ? `Team ${match.winner} won` : 'completed') : 'joined'}</div>
         </div>
       </div>
 
@@ -240,17 +247,35 @@ function MatchNoticeCard({ match, userId, isSignedUp, onSignup, onLeave, loading
         </div>
       )}
 
+      {match.scorers && match.scorers.length > 0 && (
+        <div className="bg-gray-800/50 rounded-lg p-2 mb-3 space-y-0.5">
+          {match.scorers.map((s: any) => (
+            <div key={s.id} className="text-[10px] text-gray-300">
+              {s.isGoal ? '⚽' : '🅰️'} {s.playerName} {s.minute != null && `(${s.minute}')`} — Team {s.team}
+            </div>
+          ))}
+        </div>
+      )}
+
       <div className="flex items-center justify-between">
         <span className="text-[10px] text-gray-500 uppercase tracking-wider">{match.formation}</span>
         {isSignedUpVal ? (
-          <button onClick={onLeave} disabled={loading}
-            className="bg-red-600/20 hover:bg-red-600 text-red-400 text-xs font-bold px-3 py-1.5 rounded-lg transition-colors border border-red-500/30 disabled:opacity-50">
-            {loading ? '...' : 'Leave'}
-          </button>
+          <span className="text-[10px] text-green-400 font-bold">✓ Playing</span>
+        ) : confirming ? (
+          <div className="flex gap-1">
+            <button onClick={() => { onSignup(); setConfirming(false); }} disabled={loading}
+              className="bg-green-600 hover:bg-green-700 text-white text-[10px] font-bold px-2 py-1 rounded transition-colors disabled:opacity-50">
+              {loading ? '...' : 'Yes!'}
+            </button>
+            <button onClick={() => setConfirming(false)}
+              className="bg-gray-700 hover:bg-gray-600 text-gray-300 text-[10px] font-bold px-2 py-1 rounded transition-colors">
+              Cancel
+            </button>
+          </div>
         ) : (
-          <button onClick={onSignup} disabled={loading}
-            className="bg-green-600 hover:bg-green-700 text-white text-xs font-bold px-3 py-1.5 rounded-lg transition-colors disabled:opacity-50">
-            {loading ? '...' : "I'm Playing!"}
+          <button onClick={() => setConfirming(true)} disabled={!canSignup || loading}
+            className="bg-green-600 hover:bg-green-700 text-white text-xs font-bold px-3 py-1.5 rounded-lg transition-colors disabled:opacity-50 disabled:bg-gray-700 disabled:text-gray-500">
+            {closed ? (isSignedUpVal ? '✓ Playing' : 'Locked') : "I'm Playing!"}
           </button>
         )}
       </div>

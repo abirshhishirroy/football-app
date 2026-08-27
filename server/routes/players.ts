@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import db, { uuidv4 } from '../db';
-import { authMiddleware, AuthRequest } from '../auth';
+import { authMiddleware, adminMiddleware, AuthRequest } from '../auth';
 
 const router = Router();
 
@@ -74,13 +74,14 @@ router.post('/', authMiddleware, (req: AuthRequest, res) => {
     };
     const overall = calcOverall(row);
     const id = uuidv4();
+    const ownerId = req.user!.role === 'admin' ? (userId || null) : req.user!.id;
     db.prepare(`
       INSERT INTO players (id, name, age, height, weight, position, playingStyle, weeklyActivity,
         pace, shooting, passing, dribbling, defending, physical, goalkeeping, overall, avatarUrl, userId, createdBy)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).run(id, name, age, height, weight, position, playingStyle, weeklyActivity || 0,
       row.pace, row.shooting, row.passing, row.dribbling, row.defending, row.physical, row.goalkeeping,
-      overall, avatarUrl || null, userId || null, req.user!.id);
+      overall, avatarUrl || null, ownerId, req.user!.id);
     const player = db.prepare('SELECT * FROM players WHERE id = ?').get(id);
     res.status(201).json(player);
   } catch (err: any) {
@@ -95,6 +96,10 @@ router.put('/:id', authMiddleware, (req: AuthRequest, res) => {
   try {
     const existing = db.prepare('SELECT * FROM players WHERE id = ?').get(req.params.id) as any;
     if (!existing) return res.status(404).json({ error: 'Player not found' });
+
+    if (req.user!.role !== 'admin' && existing.userId !== req.user!.id) {
+      return res.status(403).json({ error: 'You can only edit your own profile' });
+    }
 
     const { name, age, height, weight, position, playingStyle, weeklyActivity, skillRatings, avatarUrl } = req.body;
     const row = {
@@ -130,7 +135,7 @@ router.put('/:id', authMiddleware, (req: AuthRequest, res) => {
   }
 });
 
-router.delete('/:id', authMiddleware, (req, res) => {
+router.delete('/:id', authMiddleware, adminMiddleware, (req, res) => {
   const result = db.prepare('DELETE FROM players WHERE id = ?').run(req.params.id);
   if (result.changes === 0) return res.status(404).json({ error: 'Player not found' });
   res.json({ success: true });

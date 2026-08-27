@@ -1,7 +1,10 @@
 import { useEffect, useState } from 'react';
+import { Navigate } from 'react-router-dom';
 import { api } from '../api/client';
+import { useAuth } from '../context/AuthContext';
 
 export function Admin() {
+  const { user } = useAuth();
   const [players, setPlayers] = useState<any[]>([]);
   const [teams, setTeams] = useState<any[]>([]);
   const [tab, setTab] = useState<'players' | 'teams'>('players');
@@ -10,6 +13,8 @@ export function Admin() {
     api.getPlayers().then(setPlayers);
     api.getTeams().then(setTeams);
   }, []);
+
+  if (user?.role !== 'admin') return <Navigate to="/" />;
 
   return (
     <div className="space-y-6">
