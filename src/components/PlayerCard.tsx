@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import type { Player, SkillRatings } from '../types';
 
 interface EFootballCardProps {
@@ -103,6 +104,8 @@ export function PlayerCard({ player, onClick, selected, compact, size = 'normal'
   const overall = player.overall ?? 50;
   const position = player.position ?? 'CM';
   const name = player.name ?? 'Unknown';
+  const [imgError, setImgError] = useState(false);
+  const showAvatar = player.avatarUrl && !imgError;
 
   if (compact) {
     return (
@@ -114,8 +117,8 @@ export function PlayerCard({ player, onClick, selected, compact, size = 'normal'
             : 'border-gray-700 bg-gray-800/50 hover:border-gray-600 hover:bg-gray-800'
         }`}
       >
-        {player.avatarUrl ? (
-          <img src={player.avatarUrl} alt="" className="w-7 h-7 rounded-full object-cover border border-gray-600" />
+        {showAvatar ? (
+          <img src={player.avatarUrl!} alt="" className="w-7 h-7 rounded-full object-cover border border-gray-600" onError={() => setImgError(true)} />
         ) : (
           <div className="w-7 h-7 rounded-full bg-gradient-to-br from-gray-600 to-gray-800 flex items-center justify-center text-[9px] font-bold text-white/70">
             {getInitials(name)}
@@ -160,13 +163,13 @@ export function PlayerCard({ player, onClick, selected, compact, size = 'normal'
 
         {/* Avatar */}
         <div className="relative z-10 flex justify-center py-3">
-          {player.avatarUrl ? (
+          {showAvatar ? (
             <div className="relative">
               <img
-                src={player.avatarUrl}
+                src={player.avatarUrl!}
                 alt={name}
                 className="w-24 h-24 rounded-full object-cover border-3 border-white/20 shadow-lg"
-                onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                onError={() => setImgError(true)}
               />
               <div className="absolute inset-0 w-24 h-24 rounded-full bg-gradient-to-br from-white/10 to-transparent" />
             </div>

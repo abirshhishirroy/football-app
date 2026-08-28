@@ -119,13 +119,14 @@ router.get('/:id', authMiddleware, (req, res) => {
 
 router.post('/', authMiddleware, adminMiddleware, (req: AuthRequest, res) => {
   try {
-    const { title, matchDate, description, formation } = req.body;
+    const { title, matchDate, description, formation, venueName, venueLink, reportingTime } = req.body;
     if (!title || !matchDate) {
       return res.status(400).json({ error: 'Title and date required' });
     }
     const id = uuidv4();
-    db.prepare('INSERT INTO matches (id, title, matchDate, description, formation, createdBy) VALUES (?, ?, ?, ?, ?, ?)').run(
-      id, title, matchDate, description || '', formation || '4-4-2', req.user!.id
+    db.prepare('INSERT INTO matches (id, title, matchDate, description, formation, createdBy, venueName, venueLink, reportingTime) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)').run(
+      id, title, matchDate, description || '', formation || '4-4-2', req.user!.id,
+      venueName || '', venueLink || '', reportingTime || ''
     );
     const match = db.prepare('SELECT * FROM matches WHERE id = ?').get(id);
     res.status(201).json(addMatchDetails(match));
@@ -174,8 +175,8 @@ router.post('/:id/generate-teams', authMiddleware, adminMiddleware, (req: AuthRe
       WHERE ms.matchId = ?
     `).all(req.params.id);
 
-    if (signups.length < 2) {
-      return res.status(400).json({ error: 'Need at least 2 players to generate teams' });
+    if (signups.length < 8) {
+      return res.status(400).json({ error: 'Need at least 8 players to generate teams' });
     }
 
     const formations: Record<string, string[]> = {
@@ -262,10 +263,10 @@ router.post('/:id/generate-teams', authMiddleware, adminMiddleware, (req: AuthRe
 
     const existingTeam = db.prepare('SELECT id FROM match_teams WHERE matchId = ?').get(req.params.id);
     if (existingTeam) {
-      db.prepare('UPDATE match_teams SET teamA = ?, teamB = ? WHERE matchId = ?').run(teamA, teamB, req.params.id);
+      db.prepare('UPDATE match_teams SET teamA = ?, teamB = ?, teamAName = ?, teamBName = ? WHERE matchId = ?').run(teamA, teamB, 'Team A', 'Team B', req.params.id);
     } else {
-      db.prepare('INSERT INTO match_teams (id, matchId, teamA, teamB) VALUES (?, ?, ?, ?)').run(
-        uuidv4(), req.params.id, teamA, teamB
+      db.prepare('INSERT INTO match_teams (id, matchId, teamA, teamB, teamAName, teamBName) VALUES (?, ?, ?, ?, ?, ?)').run(
+        uuidv4(), req.params.id, teamA, teamB, 'Team A', 'Team B'
       );
     }
 
@@ -314,6 +315,23 @@ router.post('/:id/result', authMiddleware, adminMiddleware, (req: AuthRequest, r
 
     const updated = db.prepare('SELECT * FROM matches WHERE id = ?').get(req.params.id) as any;
     res.json(addMatchDetails(updated));
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.patch('/:id/teams/rename', authMiddleware, adminMiddleware, (req: AuthRequest, res) => {
+  try {
+    const { teamAName, teamBName } = req.body;
+    const existing = db.prepare('SELECT id FROM match_teams WHERE matchId = ?').get(req.params.id);
+    if (!existing) {
+      return res.status(404).json({ error: 'No teams generated for this match yet' });
+    }
+    db.prepare('UPDATE match_teams SET teamAName = ?, teamBName = ? WHERE matchId = ?').run(
+      teamAName || 'Team A', teamBName || 'Team B', req.params.id
+    );
+    const teamData = db.prepare('SELECT * FROM match_teams WHERE matchId = ?').get(req.params.id);
+    res.json(teamData);
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }

@@ -163,6 +163,15 @@ if (tableExists('players')) {
   }
 }
 
+// Add match venue/reporting columns if missing.
+if (tableExists('matches')) {
+  for (const col of ['venueName', 'venueLink', 'reportingTime']) {
+    if (!columnExists('matches', col)) {
+      db.prepare(`ALTER TABLE matches ADD COLUMN ${col} TEXT DEFAULT ''`).run();
+    }
+  }
+}
+
 // Add match result columns if missing.
 if (tableExists('matches')) {
   if (!columnExists('matches', 'winner')) {
@@ -176,6 +185,15 @@ if (tableExists('matches')) {
   }
   if (!columnExists('matches', 'completedAt')) {
     db.exec(`ALTER TABLE matches ADD COLUMN completedAt TEXT DEFAULT NULL`);
+  }
+}
+
+// Add match_teams team name columns if missing.
+if (tableExists('match_teams')) {
+  for (const col of ['teamAName', 'teamBName']) {
+    if (!columnExists('match_teams', col)) {
+      db.prepare(`ALTER TABLE match_teams ADD COLUMN ${col} TEXT DEFAULT ''`).run();
+    }
   }
 }
 

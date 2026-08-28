@@ -228,7 +228,17 @@ function MatchNoticeCard({ match, userId, isSignedUp, onSignup, loading }: {
         </div>
       </div>
 
-      {match.description && <p className="text-xs text-gray-500 mb-3">{match.description}</p>}
+      {match.description && <p className="text-xs text-gray-500 mb-3 whitespace-pre-line">{match.description}</p>}
+
+      {match.venueName && (
+        <p className="text-xs text-gray-400 mb-1">
+          📍 {match.venueLink ? (
+            <a href={match.venueLink} target="_blank" rel="noopener noreferrer" className="text-green-400 hover:text-green-300 underline">{match.venueName}</a>
+          ) : match.venueName}</p>
+      )}
+      {match.reportingTime && (
+        <p className="text-xs text-gray-400 mb-3">⏰ Reporting at {match.reportingTime}</p>
+      )}
 
       {match.signups && match.signups.length > 0 && (
         <div className="flex flex-wrap gap-1 mb-3">
@@ -256,6 +266,44 @@ function MatchNoticeCard({ match, userId, isSignedUp, onSignup, loading }: {
           ))}
         </div>
       )}
+
+      {match.teamData && (() => {
+        const parse = (s: string) => s.split(',').filter(Boolean);
+        const teamA = parse(match.teamData.teamA);
+        const teamB = parse(match.teamData.teamB);
+        if (teamA.length === 0 && teamB.length === 0) return null;
+        return (
+          <div className="bg-gray-800/50 rounded-lg p-2 mb-3 space-y-2">
+            <div className="text-[10px] font-bold text-purple-400 uppercase tracking-wide">Generated Teams</div>
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <div className="text-[10px] font-bold text-blue-400 mb-1">{match.teamData.teamAName || 'Team A'}</div>
+                {teamA.map((p: string, i: number) => {
+                  const [pos, ...nameParts] = p.split(':');
+                  return (
+                    <div key={i} className="text-[10px] text-gray-300 flex items-center gap-1">
+                      <span className="text-blue-400 font-bold">{pos}</span>
+                      <span>{nameParts.join(':')}</span>
+                    </div>
+                  );
+                })}
+              </div>
+              <div>
+                <div className="text-[10px] font-bold text-orange-400 mb-1">{match.teamData.teamBName || 'Team B'}</div>
+                {teamB.map((p: string, i: number) => {
+                  const [pos, ...nameParts] = p.split(':');
+                  return (
+                    <div key={i} className="text-[10px] text-gray-300 flex items-center gap-1">
+                      <span className="text-orange-400 font-bold">{pos}</span>
+                      <span>{nameParts.join(':')}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       <div className="flex items-center justify-between">
         <span className="text-[10px] text-gray-500 uppercase tracking-wider">{match.formation}</span>

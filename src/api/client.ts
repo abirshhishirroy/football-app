@@ -122,7 +122,7 @@ class ApiClient {
     return this.request<any>(`/matches/${id}`);
   }
 
-  async createMatch(data: { title: string; matchDate: string; description?: string; formation?: string }) {
+  async createMatch(data: { title: string; matchDate: string; description?: string; formation?: string; venueName?: string; venueLink?: string; reportingTime?: string }) {
     return this.request<any>('/matches', {
       method: 'POST',
       body: JSON.stringify(data),
@@ -139,6 +139,13 @@ class ApiClient {
 
   async generateMatchTeams(matchId: string) {
     return this.request<{ teamData: any; teamAScore: number; teamBScore: number }>(`/matches/${matchId}/generate-teams`, { method: 'POST' });
+  }
+
+  async renameMatchTeams(matchId: string, teamAName: string, teamBName: string) {
+    return this.request<any>(`/matches/${matchId}/teams/rename`, {
+      method: 'PATCH',
+      body: JSON.stringify({ teamAName, teamBName }),
+    });
   }
 
   async deleteMatch(matchId: string) {

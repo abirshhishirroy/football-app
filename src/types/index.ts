@@ -101,6 +101,9 @@ export interface Match {
   signupCount: number;
   teamData: any;
   scorers: MatchScorer[];
+  venueName: string;
+  venueLink: string;
+  reportingTime: string;
 }
 
 export interface TeamWithPlayers extends Team {

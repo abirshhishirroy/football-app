@@ -15,6 +15,7 @@ export function ProfileSetup() {
   const [playingStyle, setPlayingStyle] = useState<PlayingStyle>('balanced');
   const [weeklyActivity, setWeeklyActivity] = useState(10);
   const [avatarUrl, setAvatarUrl] = useState('');
+  const [avatarError, setAvatarError] = useState('');
   const [pace, setPace] = useState(50);
   const [shooting, setShooting] = useState(50);
   const [passing, setPassing] = useState(50);
@@ -25,10 +26,27 @@ export function ProfileSetup() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
+  const validateAvatarUrl = (url: string): boolean => {
+    if (!url) return true;
+    try {
+      const parsed = new URL(url);
+      if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') return false;
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError('');
+    setAvatarError('');
+    if (avatarUrl && !validateAvatarUrl(avatarUrl)) {
+      setAvatarError('Please enter a valid URL starting with http:// or https://');
+      setLoading(false);
+      return;
+    }
     try {
       await api.createPlayer({
         name, age, height, weight, position, playingStyle, weeklyActivity,
@@ -63,7 +81,14 @@ export function ProfileSetup() {
               <input value={name} onChange={(e) => setName(e.target.value)} required className={inputClass} placeholder="Your display name" />
             </Field>
             <Field label="Photo URL (optional)">
-              <input value={avatarUrl} onChange={(e) => setAvatarUrl(e.target.value)} className={inputClass} placeholder="https://example.com/photo.jpg" />
+              <input
+                value={avatarUrl}
+                onChange={(e) => { setAvatarUrl(e.target.value); setAvatarError(''); }}
+                className={`${inputClass} ${avatarError ? 'border-red-500 focus:ring-red-500' : ''}`}
+                placeholder="https://example.com/photo.jpg"
+              />
+              <p className="text-[11px] text-gray-500 mt-1">Paste a direct link to an image (JPG, PNG, etc.)</p>
+              {avatarError && <p className="text-[11px] text-red-400 mt-1">{avatarError}</p>}
             </Field>
             <Field label="Age">
               <input type="number" value={age} onChange={(e) => setAge(+e.target.value)} min={15} max={45} className={inputClass} />

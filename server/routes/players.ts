@@ -4,6 +4,17 @@ import { authMiddleware, adminMiddleware, AuthRequest } from '../auth';
 
 const router = Router();
 
+function isValidAvatarUrl(url: string | undefined | null): boolean {
+  if (!url) return true;
+  try {
+    const parsed = new URL(url);
+    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') return false;
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 function calcOverall(row: any): number {
   const weights: Record<string, number> = {
     GK: { pace: 0, shooting: 0.05, passing: 0.15, dribbling: 0.05, defending: 0.05, physical: 0.1, goalkeeping: 0.6 },
@@ -60,6 +71,9 @@ router.post('/', authMiddleware, (req: AuthRequest, res) => {
     if (!name || !age || !height || !weight || !position || !playingStyle) {
       return res.status(400).json({ error: 'All required fields must be provided' });
     }
+    if (!isValidAvatarUrl(avatarUrl)) {
+      return res.status(400).json({ error: 'Invalid photo URL. Must start with http:// or https://' });
+    }
     const row = {
       pace: skillRatings?.pace || 50,
       shooting: skillRatings?.shooting || 50,
@@ -102,6 +116,9 @@ router.put('/:id', authMiddleware, (req: AuthRequest, res) => {
     }
 
     const { name, age, height, weight, position, playingStyle, weeklyActivity, skillRatings, avatarUrl } = req.body;
+    if (avatarUrl !== undefined && !isValidAvatarUrl(avatarUrl)) {
+      return res.status(400).json({ error: 'Invalid photo URL. Must start with http:// or https://' });
+    }
     const row = {
       pace: skillRatings?.pace ?? existing.pace,
       shooting: skillRatings?.shooting ?? existing.shooting,

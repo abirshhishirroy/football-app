@@ -88,7 +88,9 @@ function CreateMatchForm({ onCreated, onCancel }: { onCreated: () => void; onCan
     return d.toISOString().slice(0, 16);
   });
   const [description, setDescription] = useState('');
-  const [formation, setFormation] = useState('4-4-2');
+  const [venueName, setVenueName] = useState('');
+  const [venueLink, setVenueLink] = useState('');
+  const [reportingTime, setReportingTime] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -97,7 +99,7 @@ function CreateMatchForm({ onCreated, onCancel }: { onCreated: () => void; onCan
     setLoading(true);
     setError('');
     try {
-      await api.createMatch({ title, matchDate, description, formation });
+      await api.createMatch({ title, matchDate, description, venueName, venueLink, reportingTime });
       onCreated();
     } catch (err: any) {
       setError(err.message);
@@ -122,19 +124,27 @@ function CreateMatchForm({ onCreated, onCancel }: { onCreated: () => void; onCan
           <input type="datetime-local" value={matchDate} onChange={(e) => setMatchDate(e.target.value)} required className={inputClass} />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-300 mb-1">Formation</label>
-          <select value={formation} onChange={(e) => setFormation(e.target.value)} className={inputClass}>
-            <option value="4-4-2">4-4-2</option>
-            <option value="4-3-3">4-3-3</option>
-            <option value="3-5-2">3-5-2</option>
-            <option value="4-2-3-1">4-2-3-1</option>
-            <option value="5-3-2">5-3-2</option>
-          </select>
+          <label className="block text-sm font-medium text-gray-300 mb-1">Venue Name</label>
+          <input value={venueName} onChange={(e) => setVenueName(e.target.value)} placeholder="e.g. Central Park Turf" className={inputClass} />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-300 mb-1">Description (optional)</label>
-          <input value={description} onChange={(e) => setDescription(e.target.value)} placeholder="e.g. friendly match at the park" className={inputClass} />
+          <label className="block text-sm font-medium text-gray-300 mb-1">Venue Link</label>
+          <input type="url" value={venueLink} onChange={(e) => setVenueLink(e.target.value)} placeholder="https://maps.google.com/..." className={inputClass} />
         </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-300 mb-1">Reporting Time</label>
+          <input type="time" value={reportingTime} onChange={(e) => setReportingTime(e.target.value)} className={inputClass} />
+        </div>
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-300 mb-1">Description (optional)</label>
+        <textarea
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          placeholder="e.g. friendly match at the park, bring your own water"
+          rows={3}
+          className={`${inputClass} resize-y`}
+        />
       </div>
       <div className="flex gap-3">
         <button type="submit" disabled={loading} className="bg-green-600 hover:bg-green-700 disabled:bg-green-800 text-white font-semibold px-6 py-2 rounded-lg transition-colors">
@@ -159,6 +169,9 @@ function MatchCard({ match, currentUser, onRefresh }: { match: any; currentUser:
   const [resultScoreB, setResultScoreB] = useState(0);
   const [resultScorers, setResultScorers] = useState<{ playerId: string; team: 'A' | 'B'; isGoal: boolean; minute: number | null }[]>([]);
   const [players, setPlayers] = useState<any[]>([]);
+  const [editingNames, setEditingNames] = useState(false);
+  const [teamAName, setTeamAName] = useState(match.teamData?.teamAName || 'Team A');
+  const [teamBName, setTeamBName] = useState(match.teamData?.teamBName || 'Team B');
 
   const isSignedUp = match.signups?.some((s: any) => s.userId === currentUser?.id);
   const matchDate = new Date(match.matchDate);
@@ -229,6 +242,20 @@ function MatchCard({ match, currentUser, onRefresh }: { match: any; currentUser:
     setShowResultForm(true);
   };
 
+  const handleRename = async () => {
+    setLoading(true);
+    setError('');
+    try {
+      await api.renameMatchTeams(match.id, teamAName, teamBName);
+      setEditingNames(false);
+      onRefresh();
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const statusColors: Record<string, string> = {
     upcoming: 'bg-green-500/20 text-green-400',
     full: 'bg-yellow-500/20 text-yellow-400',
@@ -254,7 +281,16 @@ function MatchCard({ match, currentUser, onRefresh }: { match: any; currentUser:
               {' at '}
               {matchDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
             </p>
-            {match.description && <p className="text-sm text-gray-500 mt-1">{match.description}</p>}
+            {match.venueName && (
+              <p className="text-sm text-gray-400 mt-1">
+                📍 {match.venueLink ? (
+                  <a href={match.venueLink} target="_blank" rel="noopener noreferrer" className="text-green-400 hover:text-green-300 underline">{match.venueName}</a>
+                ) : match.venueName}</p>
+            )}
+            {match.reportingTime && (
+              <p className="text-sm text-gray-400 mt-1">⏰ Reporting at {match.reportingTime}</p>
+            )}
+            {match.description && <p className="text-sm text-gray-500 mt-1 whitespace-pre-line">{match.description}</p>}
           </div>
           <div className="text-right">
             {match.status === 'completed' && match.scoreA != null && match.scoreB != null ? (
@@ -319,7 +355,7 @@ function MatchCard({ match, currentUser, onRefresh }: { match: any; currentUser:
                 <span className="text-green-400 text-sm font-bold">✓ Playing</span>
               )}
               {isAdmin && (
-                <button onClick={handleGenerate} disabled={generating || match.signupCount < 2}
+                <button onClick={handleGenerate} disabled={generating || match.signupCount < 8}
                   className="bg-purple-600 hover:bg-purple-700 disabled:bg-purple-800 disabled:cursor-not-allowed text-white font-semibold px-4 py-2 rounded-lg text-sm transition-colors">
                   {generating ? 'Generating...' : '🤖 Generate Teams'}
                 </button>
@@ -343,10 +379,23 @@ function MatchCard({ match, currentUser, onRefresh }: { match: any; currentUser:
 
       {parsedTeams && (
         <div className="border-t border-gray-700 p-5 bg-gray-800/50">
-          <h3 className="text-sm font-bold text-purple-400 mb-3">🤖 AI Generated Teams</h3>
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-sm font-bold text-purple-400">🤖 AI Generated Teams</h3>
+            {isAdmin && !editingNames && (
+              <button onClick={() => setEditingNames(true)} className="text-xs text-gray-400 hover:text-white transition-colors">
+                ✏️ Rename
+              </button>
+            )}
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <h4 className="text-xs font-bold text-blue-400 mb-2 uppercase tracking-wide">Team A</h4>
+              {isAdmin && editingNames ? (
+                <div className="flex items-center gap-2 mb-2">
+                  <input value={teamAName} onChange={(e) => setTeamAName(e.target.value)} className="bg-gray-900 border border-gray-600 rounded px-2 py-1 text-blue-400 text-xs font-bold uppercase tracking-wide focus:outline-none focus:ring-1 focus:ring-blue-500" />
+                </div>
+              ) : (
+                <h4 className="text-xs font-bold text-blue-400 mb-2 uppercase tracking-wide">{match.teamData?.teamAName || 'Team A'}</h4>
+              )}
               <div className="space-y-1">
                 {parsedTeams.teamA.map((p: string, i: number) => {
                   const [pos, ...nameParts] = p.split(':');
@@ -361,7 +410,13 @@ function MatchCard({ match, currentUser, onRefresh }: { match: any; currentUser:
               </div>
             </div>
             <div>
-              <h4 className="text-xs font-bold text-orange-400 mb-2 uppercase tracking-wide">Team B</h4>
+              {isAdmin && editingNames ? (
+                <div className="flex items-center gap-2 mb-2">
+                  <input value={teamBName} onChange={(e) => setTeamBName(e.target.value)} className="bg-gray-900 border border-gray-600 rounded px-2 py-1 text-orange-400 text-xs font-bold uppercase tracking-wide focus:outline-none focus:ring-1 focus:ring-orange-500" />
+                </div>
+              ) : (
+                <h4 className="text-xs font-bold text-orange-400 mb-2 uppercase tracking-wide">{match.teamData?.teamBName || 'Team B'}</h4>
+              )}
               <div className="space-y-1">
                 {parsedTeams.teamB.map((p: string, i: number) => {
                   const [pos, ...nameParts] = p.split(':');
@@ -376,6 +431,18 @@ function MatchCard({ match, currentUser, onRefresh }: { match: any; currentUser:
               </div>
             </div>
           </div>
+          {isAdmin && editingNames && (
+            <div className="flex gap-2 mt-3">
+              <button onClick={handleRename} disabled={loading}
+                className="bg-green-600 hover:bg-green-700 disabled:bg-green-800 text-white font-semibold px-4 py-1.5 rounded text-sm transition-colors">
+                {loading ? 'Saving...' : 'Save Names'}
+              </button>
+              <button onClick={() => { setEditingNames(false); setTeamAName(match.teamData?.teamAName || 'Team A'); setTeamBName(match.teamData?.teamBName || 'Team B'); }}
+                className="bg-gray-700 hover:bg-gray-600 text-gray-300 px-4 py-1.5 rounded text-sm transition-colors">
+                Cancel
+              </button>
+            </div>
+          )}
         </div>
       )}
 
