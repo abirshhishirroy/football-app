@@ -132,6 +132,8 @@ db.exec(`
 // Migrate the old 'users.role' CHECK constraint ('admin','coach') to ('admin','player').
 // SQLite cannot ALTER a CHECK, so rebuild the table while preserving all data.
 if (hasOldRoleCheck()) {
+  db.exec(`PRAGMA foreign_keys = OFF`);
+  db.exec(`DROP TABLE IF EXISTS users_new`);
   db.exec(`
     CREATE TABLE users_new (
       id TEXT PRIMARY KEY,
@@ -141,8 +143,6 @@ if (hasOldRoleCheck()) {
       role TEXT NOT NULL DEFAULT 'player' CHECK(role IN ('admin', 'player')),
       createdAt TEXT NOT NULL DEFAULT (datetime('now'))
     );
-  `);
-  db.exec(`
     INSERT INTO users_new (id, email, password, name, role, createdAt)
       SELECT id, email, password, name,
         CASE WHEN role = 'admin' THEN 'admin' ELSE 'player' END,
@@ -151,6 +151,7 @@ if (hasOldRoleCheck()) {
     DROP TABLE users;
     ALTER TABLE users_new RENAME TO users;
   `);
+  db.exec(`PRAGMA foreign_keys = ON`);
 }
 
 // Add player stat columns if missing (existing tables keep their data).
