@@ -88,6 +88,10 @@ class ApiClient {
     return this.request<any>(`/players/${id}`, { method: 'DELETE' });
   }
 
+  async generatePlayerStats(playerId: string) {
+    return this.request<any>(`/players/${playerId}/generate-stats`, { method: 'POST' });
+  }
+
   async getTeams() {
     return this.request<any[]>('/teams');
   }

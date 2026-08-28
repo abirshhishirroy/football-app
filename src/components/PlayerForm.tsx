@@ -5,9 +5,10 @@ interface PlayerFormProps {
   initial?: any;
   onSubmit: (data: any) => Promise<void>;
   onCancel: () => void;
+  isAdmin?: boolean;
 }
 
-export function PlayerForm({ initial, onSubmit, onCancel }: PlayerFormProps) {
+export function PlayerForm({ initial, onSubmit, onCancel, isAdmin = false }: PlayerFormProps) {
   const [name, setName] = useState(initial?.name || '');
   const [age, setAge] = useState(initial?.age || 22);
   const [height, setHeight] = useState(initial?.height || 175);
@@ -15,6 +16,7 @@ export function PlayerForm({ initial, onSubmit, onCancel }: PlayerFormProps) {
   const [position, setPosition] = useState<Position>(initial?.position || 'CM');
   const [playingStyle, setPlayingStyle] = useState<PlayingStyle>(initial?.playingStyle || 'balanced');
   const [weeklyActivity, setWeeklyActivity] = useState(initial?.weeklyActivity || 10);
+  const [avatarUrl, setAvatarUrl] = useState(initial?.avatarUrl || '');
   const [pace, setPace] = useState(initial?.skillRatings?.pace ?? initial?.pace ?? 50);
   const [shooting, setShooting] = useState(initial?.skillRatings?.shooting ?? initial?.shooting ?? 50);
   const [passing, setPassing] = useState(initial?.skillRatings?.passing ?? initial?.passing ?? 50);
@@ -24,16 +26,37 @@ export function PlayerForm({ initial, onSubmit, onCancel }: PlayerFormProps) {
   const [goalkeeping, setGoalkeeping] = useState(initial?.skillRatings?.goalkeeping ?? initial?.goalkeeping ?? 50);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [avatarError, setAvatarError] = useState('');
+
+  const validateAvatarUrl = (url: string): boolean => {
+    if (!url) return true;
+    try {
+      const parsed = new URL(url);
+      if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') return false;
+      return true;
+    } catch {
+      return false;
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setAvatarError('');
+    if (avatarUrl && !validateAvatarUrl(avatarUrl)) {
+      setAvatarError('Please enter a valid URL starting with http:// or https://');
+      return;
+    }
     setLoading(true);
     try {
-      await onSubmit({
+      const payload: any = {
         name, age, height, weight, position, playingStyle, weeklyActivity,
-        skillRatings: { pace, shooting, passing, dribbling, defending, physical, goalkeeping },
-      });
+        avatarUrl: avatarUrl || undefined,
+      };
+      if (isAdmin) {
+        payload.skillRatings = { pace, shooting, passing, dribbling, defending, physical, goalkeeping };
+      }
+      await onSubmit(payload);
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -72,19 +95,42 @@ export function PlayerForm({ initial, onSubmit, onCancel }: PlayerFormProps) {
         <Field label="Weekly Activity (hrs)">
           <input type="number" value={weeklyActivity} onChange={(e) => setWeeklyActivity(+e.target.value)} min={0} max={30} step={0.5} className={inputClass} />
         </Field>
+        <Field label="Photo URL (optional)">
+          <input
+            value={avatarUrl}
+            onChange={(e) => { setAvatarUrl(e.target.value); setAvatarError(''); }}
+            className={`${inputClass} ${avatarError ? 'border-red-500' : ''}`}
+            placeholder="https://example.com/photo.jpg"
+          />
+          {avatarError && <p className="text-[11px] text-red-400 mt-1">{avatarError}</p>}
+        </Field>
       </div>
 
       <div>
-        <h3 className="text-sm font-medium text-gray-300 mb-3">Skill Ratings</h3>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <Slider label="Pace" value={pace} onChange={setPace} />
-          <Slider label="Shooting" value={shooting} onChange={setShooting} />
-          <Slider label="Passing" value={passing} onChange={setPassing} />
-          <Slider label="Dribbling" value={dribbling} onChange={setDribbling} />
-          <Slider label="Defending" value={defending} onChange={setDefending} />
-          <Slider label="Physical" value={physical} onChange={setPhysical} />
-          {position === 'GK' && <Slider label="Goalkeeping" value={goalkeeping} onChange={setGoalkeeping} />}
-        </div>
+        <h3 className="text-sm font-medium text-gray-300 mb-3">
+          {isAdmin ? 'Skill Ratings (editable)' : 'Skill Ratings (auto-generated)'}
+        </h3>
+        {isAdmin ? (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <Slider label="Pace" value={pace} onChange={setPace} />
+            <Slider label="Shooting" value={shooting} onChange={setShooting} />
+            <Slider label="Passing" value={passing} onChange={setPassing} />
+            <Slider label="Dribbling" value={dribbling} onChange={setDribbling} />
+            <Slider label="Defending" value={defending} onChange={setDefending} />
+            <Slider label="Physical" value={physical} onChange={setPhysical} />
+            {position === 'GK' && <Slider label="Goalkeeping" value={goalkeeping} onChange={setGoalkeeping} />}
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <ReadOnlyStat label="Pace" value={pace} />
+            <ReadOnlyStat label="Shooting" value={shooting} />
+            <ReadOnlyStat label="Passing" value={passing} />
+            <ReadOnlyStat label="Dribbling" value={dribbling} />
+            <ReadOnlyStat label="Defending" value={defending} />
+            <ReadOnlyStat label="Physical" value={physical} />
+            {position === 'GK' && <ReadOnlyStat label="Goalkeeping" value={goalkeeping} />}
+          </div>
+        )}
       </div>
 
       <div className="flex gap-3 pt-2">
@@ -120,6 +166,16 @@ function Slider({ label, value, onChange }: { label: string; value: number; onCh
         type="range" min={1} max={99} value={value} onChange={(e) => onChange(+e.target.value)}
         className="w-full h-1.5 bg-gray-700 rounded-full appearance-none cursor-pointer accent-green-500"
       />
+    </div>
+  );
+}
+
+function ReadOnlyStat({ label, value }: { label: string; value: number }) {
+  const color = value >= 80 ? 'text-green-400' : value >= 60 ? 'text-yellow-400' : 'text-red-400';
+  return (
+    <div className="bg-gray-800/50 rounded-lg p-3 text-center">
+      <div className={`text-lg font-black ${color}`}>{value}</div>
+      <div className="text-[9px] text-gray-500 uppercase">{label}</div>
     </div>
   );
 }

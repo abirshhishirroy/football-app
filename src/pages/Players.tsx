@@ -23,6 +23,8 @@ export function Players() {
     return matchSearch && matchPos;
   });
 
+  const [regenerating, setRegenerating] = useState<string | null>(null);
+
   const handleAdd = async (data: any) => {
     await api.createPlayer(data);
     setShowForm(false);
@@ -33,6 +35,18 @@ export function Players() {
     await api.updatePlayer(editing.id, data);
     setEditing(null);
     load();
+  };
+
+  const handleRegenerateStats = async (playerId: string) => {
+    setRegenerating(playerId);
+    try {
+      await api.generatePlayerStats(playerId);
+      load();
+    } catch (err: any) {
+      alert(err.message);
+    } finally {
+      setRegenerating(null);
+    }
   };
 
   const handleDelete = async (id: string) => {
@@ -60,7 +74,7 @@ export function Players() {
       </div>
 
       {(showForm || editing) && (
-        <PlayerForm initial={editing} onSubmit={editing ? handleEdit : handleAdd} onCancel={() => { setShowForm(false); setEditing(null); }} />
+        <PlayerForm initial={editing} onSubmit={editing ? handleEdit : handleAdd} onCancel={() => { setShowForm(false); setEditing(null); }} isAdmin={true} />
       )}
 
       <div className="flex flex-col md:flex-row gap-3">
@@ -95,6 +109,14 @@ export function Players() {
             />
             {isAdmin && (
               <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 flex gap-1 transition-opacity">
+                <button
+                  onClick={(e) => { e.stopPropagation(); handleRegenerateStats(player.id); }}
+                  disabled={regenerating === player.id}
+                  className="bg-purple-600 hover:bg-purple-700 disabled:bg-purple-800 text-white text-xs px-2 py-1 rounded"
+                  title="Regenerate stats via AI"
+                >
+                  {regenerating === player.id ? '...' : 'AI'}
+                </button>
                 <button
                   onClick={(e) => { e.stopPropagation(); setEditing(player); setShowForm(false); }}
                   className="bg-blue-600 hover:bg-blue-700 text-white text-xs px-2 py-1 rounded"

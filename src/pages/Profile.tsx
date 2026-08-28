@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../api/client';
+import { useAuth } from '../context/AuthContext';
 import { PlayerCard } from '../components/PlayerCard';
 import { PlayerForm } from '../components/PlayerForm';
 
 export function Profile() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [player, setPlayer] = useState<any>(null);
   const [editing, setEditing] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -84,7 +86,7 @@ export function Profile() {
       </div>
 
       {editing && (
-        <PlayerForm initial={player} onSubmit={handleEdit} onCancel={() => setEditing(false)} />
+        <PlayerForm initial={player} onSubmit={handleEdit} onCancel={() => setEditing(false)} isAdmin={user?.role === 'admin'} />
       )}
     </div>
   );

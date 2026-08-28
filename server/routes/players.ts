@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import db, { uuidv4 } from '../db';
 import { authMiddleware, adminMiddleware, AuthRequest } from '../auth';
+import { generatePlayerStats } from '../llm';
 
 const router = Router();
 
@@ -65,7 +66,7 @@ router.get('/:id', authMiddleware, (req, res) => {
   res.json(player);
 });
 
-router.post('/', authMiddleware, (req: AuthRequest, res) => {
+router.post('/', authMiddleware, async (req: AuthRequest, res) => {
   try {
     const { name, age, height, weight, position, playingStyle, weeklyActivity, skillRatings, avatarUrl, userId } = req.body;
     if (!name || !age || !height || !weight || !position || !playingStyle) {
@@ -74,14 +75,33 @@ router.post('/', authMiddleware, (req: AuthRequest, res) => {
     if (!isValidAvatarUrl(avatarUrl)) {
       return res.status(400).json({ error: 'Invalid photo URL. Must start with http:// or https://' });
     }
+
+    let stats;
+    if (skillRatings?.pace != null) {
+      stats = {
+        pace: skillRatings.pace || 50,
+        shooting: skillRatings.shooting || 50,
+        passing: skillRatings.passing || 50,
+        dribbling: skillRatings.dribbling || 50,
+        defending: skillRatings.defending || 50,
+        physical: skillRatings.physical || 50,
+        goalkeeping: skillRatings.goalkeeping,
+      };
+    } else {
+      stats = await generatePlayerStats({
+        age, height, weight, position, playingStyle,
+        weeklyActivity: weeklyActivity || 0,
+      });
+    }
+
     const row = {
-      pace: skillRatings?.pace || 50,
-      shooting: skillRatings?.shooting || 50,
-      passing: skillRatings?.passing || 50,
-      dribbling: skillRatings?.dribbling || 50,
-      defending: skillRatings?.defending || 50,
-      physical: skillRatings?.physical || 50,
-      goalkeeping: skillRatings?.goalkeeping,
+      pace: stats.pace,
+      shooting: stats.shooting,
+      passing: stats.passing,
+      dribbling: stats.dribbling,
+      defending: stats.defending,
+      physical: stats.physical,
+      goalkeeping: stats.goalkeeping,
       position,
       age,
       weeklyActivity: weeklyActivity || 0,
@@ -94,7 +114,7 @@ router.post('/', authMiddleware, (req: AuthRequest, res) => {
         pace, shooting, passing, dribbling, defending, physical, goalkeeping, overall, avatarUrl, userId, createdBy)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).run(id, name, age, height, weight, position, playingStyle, weeklyActivity || 0,
-      row.pace, row.shooting, row.passing, row.dribbling, row.defending, row.physical, row.goalkeeping,
+      stats.pace, stats.shooting, stats.passing, stats.dribbling, stats.defending, stats.physical, stats.goalkeeping,
       overall, avatarUrl || null, ownerId, req.user!.id);
     const player = db.prepare('SELECT * FROM players WHERE id = ?').get(id);
     res.status(201).json(player);
@@ -145,6 +165,48 @@ router.put('/:id', authMiddleware, (req: AuthRequest, res) => {
       row.pace, row.shooting, row.passing, row.dribbling, row.defending, row.physical,
       row.goalkeeping, overall, avatarUrl !== undefined ? avatarUrl : existing.avatarUrl, req.params.id
     );
+    const player = db.prepare('SELECT * FROM players WHERE id = ?').get(req.params.id);
+    res.json(player);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.post('/:id/generate-stats', authMiddleware, adminMiddleware, async (req: AuthRequest, res) => {
+  try {
+    const existing = db.prepare('SELECT * FROM players WHERE id = ?').get(req.params.id) as any;
+    if (!existing) return res.status(404).json({ error: 'Player not found' });
+
+    const stats = await generatePlayerStats({
+      age: existing.age,
+      height: existing.height,
+      weight: existing.weight,
+      position: existing.position,
+      playingStyle: existing.playingStyle,
+      weeklyActivity: existing.weeklyActivity,
+    });
+
+    const row = {
+      pace: stats.pace,
+      shooting: stats.shooting,
+      passing: stats.passing,
+      dribbling: stats.dribbling,
+      defending: stats.defending,
+      physical: stats.physical,
+      goalkeeping: stats.goalkeeping,
+      position: existing.position,
+      age: existing.age,
+      weeklyActivity: existing.weeklyActivity,
+    };
+    const overall = calcOverall(row);
+
+    db.prepare(`
+      UPDATE players SET pace=?, shooting=?, passing=?, dribbling=?, defending=?, physical=?,
+        goalkeeping=?, overall=?
+      WHERE id=?
+    `).run(stats.pace, stats.shooting, stats.passing, stats.dribbling, stats.defending,
+      stats.physical, stats.goalkeeping, overall, req.params.id);
+
     const player = db.prepare('SELECT * FROM players WHERE id = ?').get(req.params.id);
     res.json(player);
   } catch (err: any) {

@@ -15,16 +15,9 @@ export function ProfileSetup() {
   const [playingStyle, setPlayingStyle] = useState<PlayingStyle>('balanced');
   const [weeklyActivity, setWeeklyActivity] = useState(10);
   const [avatarUrl, setAvatarUrl] = useState('');
-  const [avatarError, setAvatarError] = useState('');
-  const [pace, setPace] = useState(50);
-  const [shooting, setShooting] = useState(50);
-  const [passing, setPassing] = useState(50);
-  const [dribbling, setDribbling] = useState(50);
-  const [defending, setDefending] = useState(50);
-  const [physical, setPhysical] = useState(50);
-  const [goalkeeping, setGoalkeeping] = useState(50);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [avatarError, setAvatarError] = useState('');
 
   const validateAvatarUrl = (url: string): boolean => {
     if (!url) return true;
@@ -52,7 +45,6 @@ export function ProfileSetup() {
         name, age, height, weight, position, playingStyle, weeklyActivity,
         avatarUrl: avatarUrl || undefined,
         userId: user?.id,
-        skillRatings: { pace, shooting, passing, dribbling, defending, physical, goalkeeping },
       });
       navigate('/');
     } catch (err: any) {
@@ -71,6 +63,7 @@ export function ProfileSetup() {
           <div className="text-5xl mb-3">⚽</div>
           <h1 className="text-3xl font-black text-white">Create Your Player Profile</h1>
           <p className="text-gray-400 mt-2">Fill in your details to get your player card</p>
+          <p className="text-gray-500 text-xs mt-1">Your skill ratings will be auto-generated based on your information</p>
         </div>
 
         <form onSubmit={handleSubmit} className="bg-gray-900 rounded-2xl border border-gray-700 p-8 space-y-6">
@@ -114,19 +107,6 @@ export function ProfileSetup() {
             </Field>
           </div>
 
-          <div>
-            <h3 className="text-sm font-medium text-gray-300 mb-3">Your Skill Ratings</h3>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              <Slider label="Pace" value={pace} onChange={setPace} />
-              <Slider label="Shooting" value={shooting} onChange={setShooting} />
-              <Slider label="Passing" value={passing} onChange={setPassing} />
-              <Slider label="Dribbling" value={dribbling} onChange={setDribbling} />
-              <Slider label="Defending" value={defending} onChange={setDefending} />
-              <Slider label="Physical" value={physical} onChange={setPhysical} />
-              {position === 'GK' && <Slider label="Goalkeeping" value={goalkeeping} onChange={setGoalkeeping} />}
-            </div>
-          </div>
-
           <button type="submit" disabled={loading}
             className="w-full bg-green-600 hover:bg-green-700 disabled:bg-green-800 text-white font-bold py-3 rounded-xl transition-colors text-lg">
             {loading ? 'Creating Profile...' : 'Create My Player Card'}
@@ -142,22 +122,6 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
     <div>
       <label className="block text-sm font-medium text-gray-300 mb-1">{label}</label>
       {children}
-    </div>
-  );
-}
-
-function Slider({ label, value, onChange }: { label: string; value: number; onChange: (v: number) => void }) {
-  const color = value >= 80 ? 'text-green-400' : value >= 60 ? 'text-yellow-400' : 'text-red-400';
-  return (
-    <div>
-      <div className="flex items-center justify-between mb-1">
-        <span className="text-xs text-gray-400">{label}</span>
-        <span className={`text-xs font-bold ${color}`}>{value}</span>
-      </div>
-      <input
-        type="range" min={1} max={99} value={value} onChange={(e) => onChange(+e.target.value)}
-        className="w-full h-1.5 bg-gray-700 rounded-full appearance-none cursor-pointer accent-green-500"
-      />
     </div>
   );
 }
