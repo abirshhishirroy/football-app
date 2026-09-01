@@ -165,7 +165,7 @@ if (tableExists('players')) {
 
 // Add match venue/reporting columns if missing.
 if (tableExists('matches')) {
-  for (const col of ['venueName', 'venueLink', 'reportingTime']) {
+  for (const col of ['venueName', 'venueLink', 'reportingTime', 'matchFees']) {
     if (!columnExists('matches', col)) {
       db.prepare(`ALTER TABLE matches ADD COLUMN ${col} TEXT DEFAULT ''`).run();
     }

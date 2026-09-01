@@ -120,14 +120,14 @@ router.get('/:id', authMiddleware, (req, res) => {
 
 router.post('/', authMiddleware, adminMiddleware, (req: AuthRequest, res) => {
   try {
-    const { title, matchDate, description, formation, venueName, venueLink, reportingTime } = req.body;
+    const { title, matchDate, description, formation, venueName, venueLink, reportingTime, matchFees } = req.body;
     if (!title || !matchDate) {
       return res.status(400).json({ error: 'Title and date required' });
     }
     const id = uuidv4();
-    db.prepare('INSERT INTO matches (id, title, matchDate, description, formation, createdBy, venueName, venueLink, reportingTime) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)').run(
+    db.prepare('INSERT INTO matches (id, title, matchDate, description, formation, createdBy, venueName, venueLink, reportingTime, matchFees) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)').run(
       id, title, matchDate, description || '', formation || '4-4-2', req.user!.id,
-      venueName || '', venueLink || '', reportingTime || ''
+      venueName || '', venueLink || '', reportingTime || '', matchFees || ''
     );
     const match = db.prepare('SELECT * FROM matches WHERE id = ?').get(id);
     res.status(201).json(addMatchDetails(match));

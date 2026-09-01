@@ -92,6 +92,7 @@ function CreateMatchForm({ onCreated, onCancel }: { onCreated: () => void; onCan
   const [venueName, setVenueName] = useState('');
   const [venueLink, setVenueLink] = useState('');
   const [reportingTime, setReportingTime] = useState('');
+  const [matchFees, setMatchFees] = useState('');
   const [formation, setFormation] = useState('1-2-2-1 (6v6)');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -102,7 +103,7 @@ function CreateMatchForm({ onCreated, onCancel }: { onCreated: () => void; onCan
     setError('');
     try {
       const formationSlots = FORMATION_PRESETS[formation];
-      await api.createMatch({ title, matchDate, description, formation: JSON.stringify(formationSlots), venueName, venueLink, reportingTime });
+      await api.createMatch({ title, matchDate, description, formation: JSON.stringify(formationSlots), venueName, venueLink, reportingTime, matchFees });
       onCreated();
     } catch (err: any) {
       setError(err.message);
@@ -157,6 +158,10 @@ function CreateMatchForm({ onCreated, onCancel }: { onCreated: () => void; onCan
               </optgroup>
             ))}
           </select>
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-300 mb-1">Match Fees</label>
+          <input value={matchFees} onChange={(e) => setMatchFees(e.target.value)} placeholder="e.g. 100 BDT per person or Free" className={inputClass} />
         </div>
       </div>
       <div>
@@ -258,6 +263,9 @@ function MatchCard({ match, currentUser, onRefresh }: { match: any; currentUser:
             )}
             {match.reportingTime && (
               <p className="text-sm text-gray-400 mt-1">⏰ Reporting at {match.reportingTime}</p>
+            )}
+            {match.matchFees && (
+              <p className="text-sm text-yellow-400 mt-1">💰 Match Fees: {match.matchFees}</p>
             )}
             {match.description && <p className="text-sm text-gray-500 mt-1 whitespace-pre-line">{match.description}</p>}
           </div>

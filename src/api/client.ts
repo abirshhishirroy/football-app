@@ -126,7 +126,7 @@ class ApiClient {
     return this.request<any>(`/matches/${id}`);
   }
 
-  async createMatch(data: { title: string; matchDate: string; description?: string; formation?: string; venueName?: string; venueLink?: string; reportingTime?: string }) {
+  async createMatch(data: { title: string; matchDate: string; description?: string; formation?: string; venueName?: string; venueLink?: string; reportingTime?: string; matchFees?: string }) {
     return this.request<any>('/matches', {
       method: 'POST',
       body: JSON.stringify(data),

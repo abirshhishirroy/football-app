@@ -59,6 +59,7 @@ export function Matches() {
 }
 
 function CompletedMatchCard({ match, user, onRefresh }: { match: any; user: any; onRefresh: () => void }) {
+  const [expanded, setExpanded] = useState(false);
   const [showResultForm, setShowResultForm] = useState(false);
   const [resultWinner, setResultWinner] = useState<'A' | 'B' | 'draw'>('A');
   const [resultScoreA, setResultScoreA] = useState(match.scoreA || 0);
@@ -94,6 +95,19 @@ function CompletedMatchCard({ match, user, onRefresh }: { match: any; user: any;
     }
   };
 
+  const handleDelete = async () => {
+    if (!confirm('Delete this completed match?')) return;
+    setLoading(true);
+    try {
+      await api.deleteMatch(match.id);
+      onRefresh();
+    } catch (err: any) {
+      alert(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const parseTeams = (teamA: string, teamB: string) => {
     const parse = (s: string) => s.split(',').filter(Boolean);
     return { teamA: parse(teamA), teamB: parse(teamB) };
@@ -103,22 +117,51 @@ function CompletedMatchCard({ match, user, onRefresh }: { match: any; user: any;
 
   return (
     <div className="bg-gray-900 rounded-xl border border-gray-700 overflow-hidden">
-      <div className="p-5">
-        <div className="flex items-start justify-between mb-3">
-          <div>
+      <div className="p-5 cursor-pointer hover:bg-gray-800/50 transition-colors" onClick={() => setExpanded(!expanded)}>
+        <div className="flex items-start justify-between mb-2">
+          <div className="flex-1">
             <div className="flex items-center gap-2">
+              <span className="text-gray-500 text-sm">{expanded ? '▼' : '▶'}</span>
               <h2 className="text-lg font-bold">{match.title}</h2>
               <span className="text-xs font-medium px-2 py-0.5 rounded bg-blue-500/20 text-blue-400">
                 Completed
               </span>
             </div>
-            <p className="text-sm text-gray-400 mt-1">
+            <p className="text-sm text-gray-400 mt-1 ml-6">
               📅 {matchDate.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}
               {' at '}
               {matchDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
             </p>
+            {match.matchFees && (
+              <p className="text-sm text-yellow-400 mt-1 ml-6">💰 Match Fees: {match.matchFees}</p>
+            )}
+          </div>
+          <div className="text-right flex items-center gap-3">
+            {hasResult && (
+              <div>
+                <div className="text-2xl font-black text-green-400">
+                  {match.scoreA} - {match.scoreB}
+                </div>
+                <p className="text-xs text-gray-400">
+                  {match.winner === 'draw' ? 'Draw' : match.winner ? `Team ${match.winner} won` : ''}
+                </p>
+              </div>
+            )}
+            {isAdmin && (
+              <button onClick={(e) => { e.stopPropagation(); handleDelete(); }} disabled={loading}
+                className="text-red-400 hover:text-red-300 text-xs px-2 py-1 rounded bg-red-500/10 hover:bg-red-500/20 transition-colors">
+                🗑️
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {expanded && (
+        <div className="border-t border-gray-700">
+          <div className="p-5">
             {match.venueName && (
-              <p className="text-sm text-gray-400 mt-1">
+              <p className="text-sm text-gray-400 mb-2">
                 📍 {match.venueLink ? (
                   <a href={match.venueLink} target="_blank" rel="noopener noreferrer" className="text-green-400 hover:text-green-300 underline">
                     {match.venueName}
@@ -126,129 +169,119 @@ function CompletedMatchCard({ match, user, onRefresh }: { match: any; user: any;
                 ) : match.venueName}
               </p>
             )}
-          </div>
-          {hasResult && (
-            <div className="text-right">
-              <div className="text-2xl font-black text-green-400">
-                {match.scoreA} - {match.scoreB}
+
+            <div className="flex items-center gap-2 mb-3 text-xs text-gray-400">
+              <span>Formation: <strong className="text-gray-300">{match.formation}</strong></span>
+            </div>
+
+            {match.scorers && match.scorers.length > 0 && (
+              <div className="bg-gray-800/50 rounded-lg p-3 mb-4 space-y-1">
+                <div className="text-xs font-bold text-gray-400 mb-2">Goal Scorers</div>
+                {match.scorers.map((s: any) => (
+                  <div key={s.id} className="text-sm text-gray-300">
+                    {s.isGoal ? '⚽' : '🅰️'} {s.playerName} {s.minute != null && `(${s.minute}')`} — Team {s.team}
+                  </div>
+                ))}
               </div>
-              <p className="text-xs text-gray-400">
-                {match.winner === 'draw' ? 'Draw' : match.winner ? `Team ${match.winner} won` : ''}
-              </p>
+            )}
+
+            {isAdmin && !hasResult && (
+              <button onClick={(e) => { e.stopPropagation(); openResultForm(); }}
+                className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded-lg text-sm transition-colors">
+                📝 Enter Result
+              </button>
+            )}
+          </div>
+
+          {parsedTeams && (
+            <div className="border-t border-gray-700 p-5 bg-gray-800/50">
+              <div className="text-xs font-bold text-purple-400 mb-3">🤖 AI Generated Teams</div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <PitchView
+                  teamName={match.teamData.teamAName || 'Team A'}
+                  teamData={parsedTeams.teamA}
+                  color="blue"
+                />
+                <PitchView
+                  teamName={match.teamData.teamBName || 'Team B'}
+                  teamData={parsedTeams.teamB}
+                  color="orange"
+                />
+              </div>
             </div>
           )}
-        </div>
 
-        <div className="flex items-center gap-2 mb-3 text-xs text-gray-400">
-          <span>Formation: <strong className="text-gray-300">{match.formation}</strong></span>
-        </div>
-
-        {match.scorers && match.scorers.length > 0 && (
-          <div className="bg-gray-800/50 rounded-lg p-3 mb-4 space-y-1">
-            <div className="text-xs font-bold text-gray-400 mb-2">Goal Scorers</div>
-            {match.scorers.map((s: any) => (
-              <div key={s.id} className="text-sm text-gray-300">
-                {s.isGoal ? '⚽' : '🅰️'} {s.playerName} {s.minute != null && `(${s.minute}')`} — Team {s.team}
-              </div>
-            ))}
-          </div>
-        )}
-
-        {isAdmin && !hasResult && (
-          <button onClick={openResultForm}
-            className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded-lg text-sm transition-colors">
-            📝 Enter Result
-          </button>
-        )}
-      </div>
-
-      {parsedTeams && (
-        <div className="border-t border-gray-700 p-5 bg-gray-800/50">
-          <div className="text-xs font-bold text-purple-400 mb-3">🤖 AI Generated Teams</div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <PitchView
-              teamName={match.teamData.teamAName || 'Team A'}
-              teamData={parsedTeams.teamA}
-              color="blue"
-            />
-            <PitchView
-              teamName={match.teamData.teamBName || 'Team B'}
-              teamData={parsedTeams.teamB}
-              color="orange"
-            />
-          </div>
-        </div>
-      )}
-
-      {showResultForm && (
-        <div className="border-t border-gray-700 p-5 bg-gray-800/30">
-          <h3 className="text-sm font-bold text-blue-400 mb-3">📝 Enter Match Result</h3>
-          <div className="space-y-3">
-            <div className="grid grid-cols-3 gap-3">
-              <div>
-                <label className="block text-xs text-gray-400 mb-1">Winner</label>
-                <select value={resultWinner} onChange={(e) => setResultWinner(e.target.value as 'A' | 'B' | 'draw')}
-                  className="w-full bg-gray-800 border border-gray-600 rounded px-2 py-1.5 text-white text-sm">
-                  <option value="A">Team A</option>
-                  <option value="B">Team B</option>
-                  <option value="draw">Draw</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-xs text-gray-400 mb-1">Team A Score</label>
-                <input type="number" value={resultScoreA} onChange={(e) => setResultScoreA(+e.target.value)} min={0}
-                  className="w-full bg-gray-800 border border-gray-600 rounded px-2 py-1.5 text-white text-sm" />
-              </div>
-              <div>
-                <label className="block text-xs text-gray-400 mb-1">Team B Score</label>
-                <input type="number" value={resultScoreB} onChange={(e) => setResultScoreB(+e.target.value)} min={0}
-                  className="w-full bg-gray-800 border border-gray-600 rounded px-2 py-1.5 text-white text-sm" />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-xs text-gray-400 mb-1">Goals & Assists</label>
-              {resultScorers.map((s, i) => (
-                <div key={i} className="flex gap-2 mb-1">
-                  <select value={s.playerId} onChange={(e) => {
-                    const next = [...resultScorers]; next[i] = { ...next[i], playerId: e.target.value }; setResultScorers(next);
-                  }} className="flex-1 bg-gray-800 border border-gray-600 rounded px-2 py-1 text-white text-xs">
-                    <option value="">Select player</option>
-                    {players.map((p: any) => <option key={p.id} value={p.id}>{p.name}</option>)}
-                  </select>
-                  <select value={s.team} onChange={(e) => {
-                    const next = [...resultScorers]; next[i] = { ...next[i], team: e.target.value as 'A' | 'B' }; setResultScorers(next);
-                  }} className="w-16 bg-gray-800 border border-gray-600 rounded px-2 py-1 text-white text-xs">
-                    <option value="A">Team A</option>
-                    <option value="B">Team B</option>
-                  </select>
-                  <select value={s.isGoal ? 'goal' : 'assist'} onChange={(e) => {
-                    const next = [...resultScorers]; next[i] = { ...next[i], isGoal: e.target.value === 'goal' }; setResultScorers(next);
-                  }} className="w-20 bg-gray-800 border border-gray-600 rounded px-2 py-1 text-white text-xs">
-                    <option value="goal">Goal</option>
-                    <option value="assist">Assist</option>
-                  </select>
-                  <input type="number" value={s.minute ?? ''} onChange={(e) => {
-                    const next = [...resultScorers]; next[i] = { ...next[i], minute: e.target.value ? +e.target.value : null }; setResultScorers(next);
-                  }} placeholder="min" className="w-14 bg-gray-800 border border-gray-600 rounded px-2 py-1 text-white text-xs" />
-                  <button onClick={() => setResultScorers(resultScorers.filter((_, j) => j !== i))} className="text-red-400 hover:text-red-300 text-xs">✕</button>
+          {showResultForm && (
+            <div className="border-t border-gray-700 p-5 bg-gray-800/30">
+              <h3 className="text-sm font-bold text-blue-400 mb-3">📝 Enter Match Result</h3>
+              <div className="space-y-3">
+                <div className="grid grid-cols-3 gap-3">
+                  <div>
+                    <label className="block text-xs text-gray-400 mb-1">Winner</label>
+                    <select value={resultWinner} onChange={(e) => setResultWinner(e.target.value as 'A' | 'B' | 'draw')}
+                      className="w-full bg-gray-800 border border-gray-600 rounded px-2 py-1.5 text-white text-sm">
+                      <option value="A">Team A</option>
+                      <option value="B">Team B</option>
+                      <option value="draw">Draw</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs text-gray-400 mb-1">Team A Score</label>
+                    <input type="number" value={resultScoreA} onChange={(e) => setResultScoreA(+e.target.value)} min={0}
+                      className="w-full bg-gray-800 border border-gray-600 rounded px-2 py-1.5 text-white text-sm" />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-gray-400 mb-1">Team B Score</label>
+                    <input type="number" value={resultScoreB} onChange={(e) => setResultScoreB(+e.target.value)} min={0}
+                      className="w-full bg-gray-800 border border-gray-600 rounded px-2 py-1.5 text-white text-sm" />
+                  </div>
                 </div>
-              ))}
-              <button onClick={() => setResultScorers([...resultScorers, { playerId: '', team: 'A', isGoal: true, minute: null }])}
-                className="text-xs text-green-400 hover:text-green-300 mt-1">+ Add entry</button>
-            </div>
 
-            <div className="flex gap-2">
-              <button onClick={handleResult} disabled={loading}
-                className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-800 text-white font-semibold px-4 py-1.5 rounded text-sm transition-colors">
-                {loading ? 'Saving...' : 'Save Result'}
-              </button>
-              <button onClick={() => setShowResultForm(false)}
-                className="bg-gray-700 hover:bg-gray-600 text-gray-300 px-4 py-1.5 rounded text-sm transition-colors">
-                Cancel
-              </button>
+                <div>
+                  <label className="block text-xs text-gray-400 mb-1">Goals & Assists</label>
+                  {resultScorers.map((s, i) => (
+                    <div key={i} className="flex gap-2 mb-1">
+                      <select value={s.playerId} onChange={(e) => {
+                        const next = [...resultScorers]; next[i] = { ...next[i], playerId: e.target.value }; setResultScorers(next);
+                      }} className="flex-1 bg-gray-800 border border-gray-600 rounded px-2 py-1 text-white text-xs">
+                        <option value="">Select player</option>
+                        {players.map((p: any) => <option key={p.id} value={p.id}>{p.name}</option>)}
+                      </select>
+                      <select value={s.team} onChange={(e) => {
+                        const next = [...resultScorers]; next[i] = { ...next[i], team: e.target.value as 'A' | 'B' }; setResultScorers(next);
+                      }} className="w-16 bg-gray-800 border border-gray-600 rounded px-2 py-1 text-white text-xs">
+                        <option value="A">Team A</option>
+                        <option value="B">Team B</option>
+                      </select>
+                      <select value={s.isGoal ? 'goal' : 'assist'} onChange={(e) => {
+                        const next = [...resultScorers]; next[i] = { ...next[i], isGoal: e.target.value === 'goal' }; setResultScorers(next);
+                      }} className="w-20 bg-gray-800 border border-gray-600 rounded px-2 py-1 text-white text-xs">
+                        <option value="goal">Goal</option>
+                        <option value="assist">Assist</option>
+                      </select>
+                      <input type="number" value={s.minute ?? ''} onChange={(e) => {
+                        const next = [...resultScorers]; next[i] = { ...next[i], minute: e.target.value ? +e.target.value : null }; setResultScorers(next);
+                      }} placeholder="min" className="w-14 bg-gray-800 border border-gray-600 rounded px-2 py-1 text-white text-xs" />
+                      <button onClick={() => setResultScorers(resultScorers.filter((_, j) => j !== i))} className="text-red-400 hover:text-red-300 text-xs">✕</button>
+                    </div>
+                  ))}
+                  <button onClick={() => setResultScorers([...resultScorers, { playerId: '', team: 'A', isGoal: true, minute: null }])}
+                    className="text-xs text-green-400 hover:text-green-300 mt-1">+ Add entry</button>
+                </div>
+
+                <div className="flex gap-2">
+                  <button onClick={handleResult} disabled={loading}
+                    className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-800 text-white font-semibold px-4 py-1.5 rounded text-sm transition-colors">
+                    {loading ? 'Saving...' : 'Save Result'}
+                  </button>
+                  <button onClick={() => setShowResultForm(false)}
+                    className="bg-gray-700 hover:bg-gray-600 text-gray-300 px-4 py-1.5 rounded text-sm transition-colors">
+                    Cancel
+                  </button>
+                </div>
+              </div>
             </div>
-          </div>
+          )}
         </div>
       )}
     </div>
@@ -266,7 +299,7 @@ function PitchView({ teamName, teamData, color }: { teamName: string; teamData: 
   for (const entry of teamData) {
     const pos = entry.split(':')[0];
     if (pos === 'GK') {
-      if (current.length) slotGroups.push({ label: color === 'blue' ? 'DEF' : 'DEF', positions: [...current] });
+      if (current.length) slotGroups.push({ label: 'DEF', positions: [...current] });
       current = [];
       slotGroups.push({ label: 'GK', positions: [entry] });
     } else if (['CB', 'LB', 'RB'].includes(pos)) {
@@ -298,7 +331,7 @@ function PitchView({ teamName, teamData, color }: { teamName: string; teamData: 
         {slotGroups.map((group, gi) => (
           <div key={gi}>
             <div className={`text-[10px] ${colorClasses.text} mb-1 uppercase tracking-wide`}>{group.label}</div>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex justify-center gap-2 flex-wrap">
               {group.positions.map((entry, pi) => {
                 const [pos, ...nameParts] = entry.split(':');
                 const name = nameParts.join(':');
