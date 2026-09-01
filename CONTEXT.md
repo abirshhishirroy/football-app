@@ -9,8 +9,12 @@ A full-stack football (soccer) management application designed for amateur footb
 **Core Features:**
 - Player profile creation with AI-generated FIFA-style skill ratings (1-99)
 - Match scheduling with signup deadlines (24h before match)
+- Flexible formations supporting 5v5 through 11v11
 - AI-powered team generation that balances teams by player ratings and position compatibility
+- Dual-team generation (Team A vs Team B) with player swap capability
 - Match result tracking with goal/assist recording
+- Match fees field for player cost information
+- Collapsible match statistics cards
 - Player statistics aggregation (goals, assists, wins, matches played)
 - Admin and player role-based access control
 
@@ -91,9 +95,10 @@ football-app/
 │   │   ├── Dashboard.tsx     # Home page with player card & matches
 │   │   ├── Players.tsx       # Player list & management
 │   │   ├── Profile.tsx       # Player profile view
-│   │   ├── TeamBuilder.tsx   # AI team generation interface
+│   │   ├── TeamBuilder.tsx   # AI team generation interface (dual teams, player swap)
 │   │   ├── Teams.tsx         # Saved teams list
-│   │   ├── Notice.tsx        # Match notice board (signups, results)
+│   │   ├── Notice.tsx        # Upcoming matches with signup
+│   │   ├── Matches.tsx       # Completed match statistics (collapsible cards)
 │   │   └── Admin.tsx         # Admin panel
 │   └── types/                # Frontend TypeScript types
 ├── data/
@@ -175,6 +180,15 @@ football-app/
 - [x] Role-based access (admin vs player)
 - [x] Responsive UI with dark theme
 - [x] Railway deployment configuration
+- [x] Flexible formations (5v5 through 11v11) with custom formation builder
+- [x] Dual-team generation (Team A vs Team B) in Team Builder
+- [x] Player swap between teams after generation
+- [x] Collapsible match statistics cards
+- [x] Match fees field for player cost information
+- [x] Dedicated Matches page for completed match statistics
+- [x] Notice Board shows only upcoming matches
+- [x] Admin can delete completed matches
+- [x] Centered formation visualizations in Matches page
 
 ### 🔄 In Progress / Known Issues
 - No test suite currently implemented
@@ -261,6 +275,9 @@ npm run lint
 | POST | /api/teams | Yes | Yes | Create team |
 | DELETE | /api/teams/:id | Yes | Yes | Delete team |
 | POST | /api/ai/generate | Yes | Yes | Generate AI team |
+| POST | /api/ai/generate-both-teams | Yes | Yes | Generate two balanced teams |
+| PUT | /api/ai/update-team-positions | Yes | Yes | Update player positions in teams |
+| POST | /api/ai/swap-players | Yes | Yes | Swap players between teams |
 | GET | /api/matches | Yes | No | List all matches |
 | GET | /api/matches/:id | Yes | No | Get match by ID |
 | POST | /api/matches | Yes | Yes | Create match |
@@ -274,4 +291,4 @@ npm run lint
 
 ---
 
-*Generated for persistent AI coding context. Last updated: 2026-09-01*
+*Generated for persistent AI coding context. Last updated: 2026-09-02*
