@@ -28,7 +28,8 @@ export function Navbar() {
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center gap-8">
             <Link to="/" className="text-xl font-bold text-green-400 flex items-center gap-2">
-              <span className="text-2xl">⚽</span> Football Manager
+              <img src="https://scontent.fdac41-1.fna.fbcdn.net/v/t39.30808-6/500302922_1013838104190714_4778143179331727253_n.jpg?stp=dst-jpg_tt6&cstp=mx2048x2048&ctp=s2048x2048&_nc_cat=104&ccb=1-7&_nc_sid=6ee11a&_nc_eui2=AeF010N02Wy9iJsp6ZkpAO-lc6QP9x7dxehzpA_3Ht3F6DA89IfRmOmnD-DOy9XtomSYMmzBYmAmkwMVxUHYn0te&_nc_ohc=oEfKgrEmTugQ7kNvwHxp-rJ&_nc_oc=AdqY8mprq2YkLXfrXJemdIs7VTqoq-aYxVcgi6V0Q9JNGS5BMUZxeMqWNnmRXB7CjYc&_nc_zt=23&_nc_ht=scontent.fdac41-1.fna&_nc_gid=stQb3ZRAhEpCFf1OL3cKfA&_nc_ss=7b2a8&oh=00_AQK2KyeFCPdrKgaW8DHVU3cymw9F8uKpIAu86ffjviuBCw&oe=6A9CCE80" alt="Ns Football Manager" className="h-8 w-8 rounded-full object-cover" />
+              Ns Football Manager
             </Link>
             <div className="hidden md:flex items-center gap-1">
               {items.map((item) => (

@@ -147,7 +147,7 @@ export async function generatePlayerStats(player: PlayerInput): Promise<Generate
         'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
         'Content-Type': 'application/json',
         'HTTP-Referer': 'https://football-app.railway.app',
-        'X-Title': 'Football Manager App',
+        'X-Title': 'Ns Football Manager App',
       },
       body: JSON.stringify({
         model: MODEL,
