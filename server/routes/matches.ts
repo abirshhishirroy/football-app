@@ -2,6 +2,7 @@ import { Router } from 'express';
 import db, { uuidv4 } from '../db';
 import { authMiddleware, AuthRequest, adminMiddleware } from '../auth';
 import { generateOptimalTeam } from '../ai/teamBuilder';
+import { FORMATION_PRESETS, Position } from '../types';
 
 const router = Router();
 
@@ -179,14 +180,9 @@ router.post('/:id/generate-teams', authMiddleware, adminMiddleware, (req: AuthRe
       return res.status(400).json({ error: 'Need at least 8 players to generate teams' });
     }
 
-    const formations: Record<string, string[]> = {
-      '4-4-2': ['GK', 'LB', 'CB', 'CB', 'RB', 'LW', 'CM', 'CM', 'RW', 'ST', 'ST'],
-      '4-3-3': ['GK', 'LB', 'CB', 'CB', 'RB', 'CDM', 'CM', 'CM', 'LW', 'ST', 'RW'],
-      '3-5-2': ['GK', 'CB', 'CB', 'CB', 'LW', 'CDM', 'CM', 'CDM', 'RW', 'ST', 'ST'],
-      '4-2-3-1': ['GK', 'LB', 'CB', 'CB', 'RB', 'CDM', 'CDM', 'LW', 'CAM', 'RW', 'ST'],
-      '5-3-2': ['GK', 'LB', 'CB', 'CB', 'CB', 'RB', 'CM', 'CM', 'CM', 'ST', 'ST'],
-    };
-    const formationSlots = formations[match.formation] || formations['4-4-2'];
+    const formationSlots: Position[] = Array.isArray(match.formation)
+      ? match.formation
+      : FORMATION_PRESETS[match.formation] || FORMATION_PRESETS['1-2-2-1 (6v6)'];
 
     const playerInputs = signups.map((s: any, i: number) => {
       const profile = db.prepare('SELECT * FROM players WHERE userId = ?').get(s.userId) as any;

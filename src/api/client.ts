@@ -160,6 +160,27 @@ class ApiClient {
     return this.request<any>(`/matches/${matchId}/result`, { method: 'POST', body: JSON.stringify(data) });
   }
 
+  async generateBothTeams(data: { formation: any; playerIds: string[]; teamAName?: string; teamBName?: string }) {
+    return this.request<{ teamA: any; teamB: any }>('/ai/generate-both-teams', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async updateTeamPositions(data: { teamA: { position: string; playerId: string }[]; teamB: { position: string; playerId: string }[]; formation: any; teamAName?: string; teamBName?: string }) {
+    return this.request<{ teamA: any; teamB: any }>('/ai/update-team-positions', {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async swapPlayers(data: { teamASlots: { position: string; playerId: string }[]; teamBSlots: { position: string; playerId: string }[]; formation: any; teamAName?: string; teamBName?: string }) {
+    return this.request<{ teamA: any; teamB: any }>('/ai/swap-players', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
   logout() {
     this.setToken(null);
   }

@@ -7,12 +7,14 @@ const NAV_ITEMS = [
   { path: '/team-builder', label: 'Team Builder' },
   { path: '/teams', label: 'Teams' },
   { path: '/notice', label: 'Notice Board' },
+  { path: '/matches', label: 'Matches' },
 ];
 
 const PLAYER_NAV_ITEMS = [
   { path: '/', label: 'Dashboard' },
   { path: '/players', label: 'Players' },
   { path: '/notice', label: 'Notice Board' },
+  { path: '/matches', label: 'Matches' },
   { path: '/profile', label: 'Profile' },
 ];
 
