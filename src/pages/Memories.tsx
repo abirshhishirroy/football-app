@@ -160,6 +160,13 @@ export function Memories() {
         />
       )}
 
+      <div className="bg-gray-800 rounded-lg p-3 text-xs text-gray-400 font-mono">
+        Debug: {memories.length} memories, {grouped.length} groups
+        {memories.length > 0 && (
+          <span> — IDs: {memories.map(m => m.id.slice(0, 8)).join(', ')}</span>
+        )}
+      </div>
+
       {grouped.length === 0 ? (
         <div className="bg-gray-900 rounded-xl border border-gray-700 p-12 flex flex-col items-center justify-center text-center">
           <div className="text-6xl mb-4">📸</div>
@@ -171,13 +178,17 @@ export function Memories() {
       ) : (
         <div className="space-y-8">
           {grouped.map((group) => (
-            <MatchGroupCard
-              key={group.matchId}
-              group={group}
-              isAdmin={isAdmin}
-              onViewMemory={(memory) => openLightbox(memory, group.memories)}
-              onDelete={handleDelete}
-            />
+            <div key={group.matchId}>
+              <div className="text-xs text-gray-500 mb-1 font-mono">
+                Group "{group.matchTitle}" has {group.memories.length} items
+              </div>
+              <MatchGroupCard
+                group={group}
+                isAdmin={isAdmin}
+                onViewMemory={(memory) => openLightbox(memory, group.memories)}
+                onDelete={handleDelete}
+              />
+            </div>
           ))}
         </div>
       )}
