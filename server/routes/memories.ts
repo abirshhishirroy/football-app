@@ -21,11 +21,14 @@ function uploadToCloudinary(file: Express.Multer.File): Promise<{ url: string; t
     }
 
     const resourceType = isVideo ? 'video' : 'image';
+    const uniqueId = `memories/${uuidv4()}`;
     const base64 = `data:${file.mimetype};base64,${file.buffer.toString('base64')}`;
 
     const uploadOptions: any = {
       resource_type: resourceType,
-      folder: 'football-memories',
+      public_id: uniqueId,
+      unique_filename: true,
+      overwrite: false,
     };
 
     if (isImage) {
@@ -35,7 +38,7 @@ function uploadToCloudinary(file: Express.Multer.File): Promise<{ url: string; t
       uploadOptions.eager = [{ transformation: [{ quality: 'auto:low', width: 400, crop: 'limit', fetch_format: 'auto' }] }];
     }
 
-    cloudinary.uploader.upload_large(base64, uploadOptions, (error, result) => {
+    cloudinary.uploader.upload(base64, uploadOptions, (error, result) => {
       if (error) return reject(error);
       if (!result) return reject(new Error('Upload failed'));
 
@@ -74,6 +77,9 @@ router.post('/:matchId', authMiddleware, adminMiddleware, upload.single('file'),
       INSERT INTO match_memories (id, matchId, url, thumbnailUrl, type, caption, uploadedBy)
       VALUES (?, ?, ?, ?, ?, ?, ?)
     `).run(id, matchId, url, thumbnailUrl, type, caption || null, req.user!.id);
+
+    const totalCount = db.prepare('SELECT COUNT(*) as count FROM match_memories WHERE matchId = ?').get(matchId) as any;
+    console.log(`[memory] Uploaded memory ${id} for match ${matchId}. Total memories for this match: ${totalCount.count}`);
 
     const memory = db.prepare(`
       SELECT m.*, u.name as uploaderName, mt.title as matchTitle, mt.matchDate

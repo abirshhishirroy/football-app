@@ -257,7 +257,7 @@ npm run lint
 - **Location:** `data/football.db`
 - **Engine:** SQLite with WAL mode
 - **Migrations:** Automatic on server startup (non-destructive, checks column existence)
-- **Seeded Data:** Admin user (`admin@football.com` / `admin123`) auto-created
+- **Seeded Data:** Admin user (`********` / `*****`) auto-created
 
 ### API Endpoints Reference
 | Method | Endpoint | Auth | Admin | Description |
