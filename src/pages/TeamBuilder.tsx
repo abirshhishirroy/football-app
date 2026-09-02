@@ -209,36 +209,36 @@ export function TeamBuilder() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-1 space-y-4">
-          <div className="bg-gray-900 rounded-xl border border-gray-700 p-6 space-y-4">
+          <div className="bg-card rounded-xl border border-border-card p-6 space-y-4">
             <h2 className="text-lg font-bold">Configuration</h2>
 
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1">Team A Name</label>
+              <label className="block text-sm font-medium text-secondary mb-1">Team A Name</label>
               <input value={teamAName} onChange={(e) => setTeamAName(e.target.value)} placeholder="e.g. Dream Team"
-                className="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-2.5 text-white text-sm focus:outline-none focus:ring-2 focus:ring-green-500" />
+                className="w-full bg-input border border-border-input rounded-lg px-4 py-2.5 text-white text-sm focus:outline-none focus:ring-2 focus:ring-brand" />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1">Team B Name</label>
+              <label className="block text-sm font-medium text-secondary mb-1">Team B Name</label>
               <input value={teamBName} onChange={(e) => setTeamBName(e.target.value)} placeholder="e.g. All Stars"
-                className="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-2.5 text-white text-sm focus:outline-none focus:ring-2 focus:ring-green-500" />
+                className="w-full bg-input border border-border-input rounded-lg px-4 py-2.5 text-white text-sm focus:outline-none focus:ring-2 focus:ring-brand" />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">Formation Mode</label>
+              <label className="block text-sm font-medium text-secondary mb-2">Formation Mode</label>
               <div className="flex gap-2 mb-3">
                 <button onClick={() => setFormationMode('preset')}
-                  className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${formationMode === 'preset' ? 'bg-green-600 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}>
+                  className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${formationMode === 'preset' ? 'bg-brand text-white' : 'bg-input text-muted hover:bg-active'}`}>
                   Presets
                 </button>
                 <button onClick={() => setFormationMode('custom')}
-                  className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${formationMode === 'custom' ? 'bg-green-600 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}>
+                  className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${formationMode === 'custom' ? 'bg-brand text-white' : 'bg-input text-muted hover:bg-active'}`}>
                   Custom
                 </button>
               </div>
 
               {formationMode === 'preset' ? (
                 <select value={presetName} onChange={(e) => setPresetName(e.target.value)}
-                  className="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-2.5 text-white text-sm focus:outline-none focus:ring-2 focus:ring-green-500">
+                  className="w-full bg-input border border-border-input rounded-lg px-4 py-2.5 text-white text-sm focus:outline-none focus:ring-2 focus:ring-brand">
                   {Object.entries(groupedFormations).map(([size, formations]) => (
                     <optgroup key={size} label={size}>
                       {formations.map((f) => (
@@ -252,14 +252,14 @@ export function TeamBuilder() {
                   <div className="flex flex-wrap gap-1">
                     {POSITIONS.map((pos) => (
                       <button key={pos} onClick={() => setCustomSlots([...customSlots, pos])}
-                        className="px-2 py-1 bg-gray-800 hover:bg-gray-700 text-gray-300 text-xs rounded transition-colors">
+                        className="px-2 py-1 bg-input hover:bg-active text-secondary text-xs rounded transition-colors">
                         + {pos}
                       </button>
                     ))}
                   </div>
                   <div className="flex flex-wrap gap-1">
                     {customSlots.map((slot, i) => (
-                      <span key={i} className="flex items-center gap-1 px-2 py-1 bg-gray-800 text-gray-300 text-xs rounded">
+                      <span key={i} className="flex items-center gap-1 px-2 py-1 bg-input text-secondary text-xs rounded">
                         {slot}
                         <button onClick={() => setCustomSlots(customSlots.filter((_, j) => j !== i))}
                           className="text-red-400 hover:text-red-300 ml-1">×</button>
@@ -270,27 +270,27 @@ export function TeamBuilder() {
               )}
             </div>
 
-            <div className="text-xs text-gray-400">
+            <div className="text-xs text-muted">
               Formation slots ({formationSlots.length} per team): {formationSlots.join(' - ')}
             </div>
           </div>
 
-          <div className="bg-gray-900 rounded-xl border border-gray-700 p-6">
+          <div className="bg-card rounded-xl border border-border-card p-6">
             <h2 className="text-lg font-bold mb-3">Select Players ({selectedIds.size})</h2>
-            <p className="text-xs text-gray-400 mb-3">Optional: select specific players. Leave empty to use all.</p>
+            <p className="text-xs text-muted mb-3">Optional: select specific players. Leave empty to use all.</p>
             <div className="max-h-96 overflow-y-auto space-y-1">
               {players.map((p) => (
                 <button key={p.id} onClick={() => togglePlayer(p.id)}
-                  className={`w-full text-left p-2 rounded-lg text-sm transition-colors ${selectedIds.has(p.id) ? 'bg-green-600/20 border border-green-500/50' : 'bg-gray-800 hover:bg-gray-700 border border-transparent'}`}>
+                  className={`w-full text-left p-2 rounded-lg text-sm transition-colors ${selectedIds.has(p.id) ? 'bg-brand/20 border border-brand/50' : 'bg-input hover:bg-active border border-transparent'}`}>
                   <div className="flex items-center justify-between">
                     <span className="font-medium">{p.name}</span>
-                    <span className="text-xs text-gray-400">{p.overall} OVR</span>
+                    <span className="text-xs text-muted">{p.overall} OVR</span>
                   </div>
-                  <div className="text-xs text-gray-500">{p.position}</div>
+                  <div className="text-xs text-dim">{p.position}</div>
                 </button>
               ))}
             </div>
-            {players.length === 0 && <p className="text-sm text-gray-500">No players available</p>}
+            {players.length === 0 && <p className="text-sm text-dim">No players available</p>}
           </div>
 
           {error && <div className="bg-red-500/10 border border-red-500 text-red-400 px-4 py-2 rounded-lg text-sm">{error}</div>}
@@ -308,13 +308,13 @@ export function TeamBuilder() {
           {teamA && teamB ? (
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
-                <div className="bg-gray-900 rounded-xl border border-gray-700 p-4">
+                <div className="bg-card rounded-xl border border-border-card p-4">
                   <div className="flex items-center justify-between">
                     <h3 className="text-lg font-bold text-blue-400">{teamA.name}</h3>
                     <span className="text-2xl font-black text-yellow-400">{teamA.score}</span>
                   </div>
                 </div>
-                <div className="bg-gray-900 rounded-xl border border-gray-700 p-4">
+                <div className="bg-card rounded-xl border border-border-card p-4">
                   <div className="flex items-center justify-between">
                     <h3 className="text-lg font-bold text-orange-400">{teamB.name}</h3>
                     <span className="text-2xl font-black text-yellow-400">{teamB.score}</span>
@@ -338,7 +338,7 @@ export function TeamBuilder() {
               </div>
 
               {editingTeam ? (
-                <div className="bg-gray-900 rounded-xl border border-gray-700 p-6 space-y-4">
+                <div className="bg-card rounded-xl border border-border-card p-6 space-y-4">
                   <h3 className="text-lg font-bold">Edit Positions</h3>
                   <div className="grid grid-cols-2 gap-4">
                     <EditTeamPanel
@@ -368,11 +368,11 @@ export function TeamBuilder() {
                   </div>
                   <div className="flex gap-2">
                     <button onClick={savePositions} disabled={loading}
-                      className="bg-green-600 hover:bg-green-700 disabled:bg-green-800 text-white font-semibold px-6 py-2 rounded-lg transition-colors">
+                      className="bg-brand hover:bg-brand-hover disabled:bg-brand-dim text-white font-semibold px-6 py-2 rounded-lg transition-colors">
                       {loading ? 'Saving...' : 'Save Changes'}
                     </button>
                     <button onClick={cancelEditing}
-                      className="bg-gray-700 hover:bg-gray-600 text-gray-300 px-6 py-2 rounded-lg transition-colors">
+                      className="bg-active hover:bg-active text-secondary px-6 py-2 rounded-lg transition-colors">
                       Cancel
                     </button>
                   </div>
@@ -380,21 +380,21 @@ export function TeamBuilder() {
               ) : (
                 <div className="flex gap-2">
                   <button onClick={() => startEditing('A')}
-                    className="bg-gray-800 hover:bg-gray-700 text-white font-semibold px-4 py-2 rounded-lg transition-colors text-sm">
+                    className="bg-input hover:bg-active text-white font-semibold px-4 py-2 rounded-lg transition-colors text-sm">
                     ✏️ Edit Team A
                   </button>
                   <button onClick={() => startEditing('B')}
-                    className="bg-gray-800 hover:bg-gray-700 text-white font-semibold px-4 py-2 rounded-lg transition-colors text-sm">
+                    className="bg-input hover:bg-active text-white font-semibold px-4 py-2 rounded-lg transition-colors text-sm">
                     ✏️ Edit Team B
                   </button>
                 </div>
               )}
             </div>
           ) : (
-            <div className="bg-gray-900 rounded-xl border border-gray-700 p-12 flex flex-col items-center justify-center text-center">
+            <div className="bg-card rounded-xl border border-border-card p-12 flex flex-col items-center justify-center text-center">
               <div className="text-6xl mb-4">⚽</div>
-              <h3 className="text-xl font-bold text-gray-300">No teams generated yet</h3>
-              <p className="text-gray-500 mt-2 max-w-md">
+              <h3 className="text-xl font-bold text-secondary">No teams generated yet</h3>
+              <p className="text-dim mt-2 max-w-md">
                 Configure your team settings and click "Generate Teams" to let AI build balanced lineups.
               </p>
             </div>
@@ -420,14 +420,14 @@ function EditTeamPanel({ side, name, slots, players, allPlayerIds, onUpdate, onA
   const color = side === 'A' ? 'blue' : 'orange';
 
   return (
-    <div className={`bg-gray-800 rounded-lg p-4 border-${color}-500/30`}>
+    <div className={`bg-input rounded-lg p-4 border-${color}-500/30`}>
       <div className={`text-sm font-bold text-${color}-400 mb-3`}>{name}</div>
       <div className="space-y-2">
         {slots.map((slot, i) => (
           <div key={i} className="flex items-center gap-2">
-            <span className="text-[10px] text-gray-400 w-8">{slot.position}</span>
+            <span className="text-[10px] text-muted w-8">{slot.position}</span>
             <select value={slot.playerId} onChange={(e) => onUpdate(side, i, e.target.value)}
-              className="flex-1 bg-gray-900 border border-gray-600 rounded px-2 py-1 text-white text-xs">
+              className="flex-1 bg-card border border-border-input rounded px-2 py-1 text-white text-xs">
               <option value="">Empty</option>
               {players.filter(p => !allPlayerIds.has(p.id) || p.id === slot.playerId).map((p) => (
                 <option key={p.id} value={p.id}>{p.name} ({p.overall})</option>
@@ -443,7 +443,7 @@ function EditTeamPanel({ side, name, slots, players, allPlayerIds, onUpdate, onA
       <div className="flex flex-wrap gap-1 mt-3">
         {formationSlots.map((pos, i) => (
           <button key={i} onClick={() => onAdd(side, pos)}
-            className="px-2 py-1 bg-gray-700 hover:bg-gray-600 text-gray-300 text-[10px] rounded">
+            className="px-2 py-1 bg-active hover:bg-active text-secondary text-[10px] rounded">
             + {pos}
           </button>
         ))}
@@ -509,14 +509,14 @@ function Pitch({ teamName, slots, teamPlayers, color }: { teamName: string; slot
                   const player = posMap.get(pos);
                   return (
                     <div key={pi} className={`${colorClasses.bg} border ${colorClasses.border} rounded-lg p-2 min-w-[90px] text-center`}>
-                      <div className="text-[10px] text-gray-400 mb-1">{pos}</div>
+                      <div className="text-[10px] text-muted mb-1">{pos}</div>
                       {player ? (
                         <>
                           <div className="text-xs font-bold truncate">{player.name}</div>
                           <div className="text-[10px] text-green-400 font-bold">{player.overall}</div>
                         </>
                       ) : (
-                        <div className="text-[10px] text-gray-500">Empty</div>
+                        <div className="text-[10px] text-dim">Empty</div>
                       )}
                     </div>
                   );

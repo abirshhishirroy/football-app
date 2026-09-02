@@ -27,11 +27,11 @@ export function Navbar() {
   const items = isAdmin ? NAV_ITEMS : PLAYER_NAV_ITEMS;
 
   return (
-    <nav className="bg-gray-900 border-b border-gray-700">
+    <nav className="bg-card border-b border-border-card">
       <div className="max-w-7xl mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center gap-8">
-            <Link to="/" className="text-xl font-bold text-green-400 flex items-center gap-2">
+            <Link to="/" className="text-xl font-bold text-brand flex items-center gap-2">
               <img src="https://scontent.fdac41-1.fna.fbcdn.net/v/t39.30808-6/500302922_1013838104190714_4778143179331727253_n.jpg?stp=dst-jpg_tt6&cstp=mx2048x2048&ctp=s2048x2048&_nc_cat=104&ccb=1-7&_nc_sid=6ee11a&_nc_eui2=AeF010N02Wy9iJsp6ZkpAO-lc6QP9x7dxehzpA_3Ht3F6DA89IfRmOmnD-DOy9XtomSYMmzBYmAmkwMVxUHYn0te&_nc_ohc=oEfKgrEmTugQ7kNvwHxp-rJ&_nc_oc=AdqY8mprq2YkLXfrXJemdIs7VTqoq-aYxVcgi6V0Q9JNGS5BMUZxeMqWNnmRXB7CjYc&_nc_zt=23&_nc_ht=scontent.fdac41-1.fna&_nc_gid=stQb3ZRAhEpCFf1OL3cKfA&_nc_ss=7b2a8&oh=00_AQK2KyeFCPdrKgaW8DHVU3cymw9F8uKpIAu86ffjviuBCw&oe=6A9CCE80" alt="Ns Football Manager" className="h-8 w-8 rounded-full object-cover" />
               Ns Football Manager
             </Link>
@@ -42,8 +42,8 @@ export function Navbar() {
                   to={item.path}
                   className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                     location.pathname === item.path
-                      ? 'bg-gray-700 text-white'
-                      : 'text-gray-300 hover:bg-gray-800 hover:text-white'
+                      ? 'bg-active text-white'
+                      : 'text-secondary hover:bg-input hover:text-white'
                   }`}
                 >
                   {item.label}
@@ -54,8 +54,8 @@ export function Navbar() {
                   to="/admin"
                   className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                     location.pathname === '/admin'
-                      ? 'bg-gray-700 text-white'
-                      : 'text-gray-300 hover:bg-gray-800 hover:text-white'
+                      ? 'bg-active text-white'
+                      : 'text-secondary hover:bg-input hover:text-white'
                   }`}
                 >
                   Admin
@@ -64,10 +64,10 @@ export function Navbar() {
             </div>
           </div>
           <div className="flex items-center gap-4">
-            <span className="text-sm text-gray-400">{user?.name}</span>
+            <span className="text-sm text-muted">{user?.name}</span>
             <button
               onClick={logout}
-              className="px-3 py-1.5 text-sm bg-gray-800 text-gray-300 rounded-md hover:bg-gray-700 hover:text-white transition-colors"
+              className="px-3 py-1.5 text-sm bg-input text-secondary rounded-md hover:bg-active hover:text-white transition-colors"
             >
               Logout
             </button>

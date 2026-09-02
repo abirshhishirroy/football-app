@@ -23,14 +23,14 @@ export function Matches() {
   useEffect(() => { load(); }, []);
 
   if (loading) {
-    return <div className="flex items-center justify-center h-64 text-gray-500">Loading matches...</div>;
+    return <div className="flex items-center justify-center h-64 text-dim">Loading matches...</div>;
   }
 
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-black">Match Statistics</h1>
-        <p className="text-gray-400 mt-1">View all completed matches and their statistics</p>
+        <p className="text-muted mt-1">View all completed matches and their statistics</p>
       </div>
 
       {error && (
@@ -40,10 +40,10 @@ export function Matches() {
       )}
 
       {matches.length === 0 ? (
-        <div className="bg-gray-900 rounded-xl border border-gray-700 p-12 flex flex-col items-center justify-center text-center">
+        <div className="bg-card rounded-xl border border-border-card p-12 flex flex-col items-center justify-center text-center">
           <div className="text-6xl mb-4">⚽</div>
-          <h3 className="text-xl font-bold text-gray-300">No completed matches yet</h3>
-          <p className="text-gray-500 mt-2 max-w-md">
+          <h3 className="text-xl font-bold text-secondary">No completed matches yet</h3>
+          <p className="text-dim mt-2 max-w-md">
             Completed matches with scores and statistics will appear here.
           </p>
         </div>
@@ -116,18 +116,18 @@ function CompletedMatchCard({ match, user, onRefresh }: { match: any; user: any;
   const parsedTeams = match.teamData ? parseTeams(match.teamData.teamA, match.teamData.teamB) : null;
 
   return (
-    <div className="bg-gray-900 rounded-xl border border-gray-700 overflow-hidden">
-      <div className="p-5 cursor-pointer hover:bg-gray-800/50 transition-colors" onClick={() => setExpanded(!expanded)}>
+    <div className="bg-card rounded-xl border border-border-card overflow-hidden">
+      <div className="p-5 cursor-pointer hover:bg-input/50 transition-colors" onClick={() => setExpanded(!expanded)}>
         <div className="flex items-start justify-between mb-2">
           <div className="flex-1">
             <div className="flex items-center gap-2">
-              <span className="text-gray-500 text-sm">{expanded ? '▼' : '▶'}</span>
+              <span className="text-dim text-sm">{expanded ? '▼' : '▶'}</span>
               <h2 className="text-lg font-bold">{match.title}</h2>
               <span className="text-xs font-medium px-2 py-0.5 rounded bg-blue-500/20 text-blue-400">
                 Completed
               </span>
             </div>
-            <p className="text-sm text-gray-400 mt-1 ml-6">
+            <p className="text-sm text-muted mt-1 ml-6">
               📅 {matchDate.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}
               {' at '}
               {matchDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
@@ -139,10 +139,10 @@ function CompletedMatchCard({ match, user, onRefresh }: { match: any; user: any;
           <div className="text-right flex items-center gap-3">
             {hasResult && (
               <div>
-                <div className="text-2xl font-black text-green-400">
+                <div className="text-2xl font-black text-brand">
                   {match.scoreA} - {match.scoreB}
                 </div>
-                <p className="text-xs text-gray-400">
+                <p className="text-xs text-muted">
                   {match.winner === 'draw' ? 'Draw' : match.winner ? `Team ${match.winner} won` : ''}
                 </p>
               </div>
@@ -158,27 +158,27 @@ function CompletedMatchCard({ match, user, onRefresh }: { match: any; user: any;
       </div>
 
       {expanded && (
-        <div className="border-t border-gray-700">
+        <div className="border-t border-border-card">
           <div className="p-5">
             {match.venueName && (
-              <p className="text-sm text-gray-400 mb-2">
+              <p className="text-sm text-muted mb-2">
                 📍 {match.venueLink ? (
-                  <a href={match.venueLink} target="_blank" rel="noopener noreferrer" className="text-green-400 hover:text-green-300 underline">
+                  <a href={match.venueLink} target="_blank" rel="noopener noreferrer" className="text-brand hover:text-brand-light underline">
                     {match.venueName}
                   </a>
                 ) : match.venueName}
               </p>
             )}
 
-            <div className="flex items-center gap-2 mb-3 text-xs text-gray-400">
-              <span>Formation: <strong className="text-gray-300">{match.formation}</strong></span>
+            <div className="flex items-center gap-2 mb-3 text-xs text-muted">
+              <span>Formation: <strong className="text-secondary">{match.formation}</strong></span>
             </div>
 
             {match.scorers && match.scorers.length > 0 && (
-              <div className="bg-gray-800/50 rounded-lg p-3 mb-4 space-y-1">
-                <div className="text-xs font-bold text-gray-400 mb-2">Goal Scorers</div>
+              <div className="bg-input/50 rounded-lg p-3 mb-4 space-y-1">
+                <div className="text-xs font-bold text-muted mb-2">Goal Scorers</div>
                 {match.scorers.map((s: any) => (
-                  <div key={s.id} className="text-sm text-gray-300">
+                  <div key={s.id} className="text-sm text-secondary">
                     {s.isGoal ? '⚽' : '🅰️'} {s.playerName} {s.minute != null && `(${s.minute}')`} — Team {s.team}
                   </div>
                 ))}
@@ -194,7 +194,7 @@ function CompletedMatchCard({ match, user, onRefresh }: { match: any; user: any;
           </div>
 
           {parsedTeams && (
-            <div className="border-t border-gray-700 p-5 bg-gray-800/50">
+            <div className="border-t border-border-card p-5 bg-input/50">
               <div className="text-xs font-bold text-purple-400 mb-3">🤖 AI Generated Teams</div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <PitchView
@@ -212,61 +212,61 @@ function CompletedMatchCard({ match, user, onRefresh }: { match: any; user: any;
           )}
 
           {showResultForm && (
-            <div className="border-t border-gray-700 p-5 bg-gray-800/30">
+            <div className="border-t border-border-card p-5 bg-input/30">
               <h3 className="text-sm font-bold text-blue-400 mb-3">📝 Enter Match Result</h3>
               <div className="space-y-3">
                 <div className="grid grid-cols-3 gap-3">
                   <div>
-                    <label className="block text-xs text-gray-400 mb-1">Winner</label>
+                    <label className="block text-xs text-muted mb-1">Winner</label>
                     <select value={resultWinner} onChange={(e) => setResultWinner(e.target.value as 'A' | 'B' | 'draw')}
-                      className="w-full bg-gray-800 border border-gray-600 rounded px-2 py-1.5 text-white text-sm">
+                      className="w-full bg-input border border-border-input rounded px-2 py-1.5 text-white text-sm">
                       <option value="A">Team A</option>
                       <option value="B">Team B</option>
                       <option value="draw">Draw</option>
                     </select>
                   </div>
                   <div>
-                    <label className="block text-xs text-gray-400 mb-1">Team A Score</label>
+                    <label className="block text-xs text-muted mb-1">Team A Score</label>
                     <input type="number" value={resultScoreA} onChange={(e) => setResultScoreA(+e.target.value)} min={0}
-                      className="w-full bg-gray-800 border border-gray-600 rounded px-2 py-1.5 text-white text-sm" />
+                      className="w-full bg-input border border-border-input rounded px-2 py-1.5 text-white text-sm" />
                   </div>
                   <div>
-                    <label className="block text-xs text-gray-400 mb-1">Team B Score</label>
+                    <label className="block text-xs text-muted mb-1">Team B Score</label>
                     <input type="number" value={resultScoreB} onChange={(e) => setResultScoreB(+e.target.value)} min={0}
-                      className="w-full bg-gray-800 border border-gray-600 rounded px-2 py-1.5 text-white text-sm" />
+                      className="w-full bg-input border border-border-input rounded px-2 py-1.5 text-white text-sm" />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-xs text-gray-400 mb-1">Goals & Assists</label>
+                  <label className="block text-xs text-muted mb-1">Goals & Assists</label>
                   {resultScorers.map((s, i) => (
                     <div key={i} className="flex gap-2 mb-1">
                       <select value={s.playerId} onChange={(e) => {
                         const next = [...resultScorers]; next[i] = { ...next[i], playerId: e.target.value }; setResultScorers(next);
-                      }} className="flex-1 bg-gray-800 border border-gray-600 rounded px-2 py-1 text-white text-xs">
+                      }} className="flex-1 bg-input border border-border-input rounded px-2 py-1 text-white text-xs">
                         <option value="">Select player</option>
                         {players.map((p: any) => <option key={p.id} value={p.id}>{p.name}</option>)}
                       </select>
                       <select value={s.team} onChange={(e) => {
                         const next = [...resultScorers]; next[i] = { ...next[i], team: e.target.value as 'A' | 'B' }; setResultScorers(next);
-                      }} className="w-16 bg-gray-800 border border-gray-600 rounded px-2 py-1 text-white text-xs">
+                      }} className="w-16 bg-input border border-border-input rounded px-2 py-1 text-white text-xs">
                         <option value="A">Team A</option>
                         <option value="B">Team B</option>
                       </select>
                       <select value={s.isGoal ? 'goal' : 'assist'} onChange={(e) => {
                         const next = [...resultScorers]; next[i] = { ...next[i], isGoal: e.target.value === 'goal' }; setResultScorers(next);
-                      }} className="w-20 bg-gray-800 border border-gray-600 rounded px-2 py-1 text-white text-xs">
+                      }} className="w-20 bg-input border border-border-input rounded px-2 py-1 text-white text-xs">
                         <option value="goal">Goal</option>
                         <option value="assist">Assist</option>
                       </select>
                       <input type="number" value={s.minute ?? ''} onChange={(e) => {
                         const next = [...resultScorers]; next[i] = { ...next[i], minute: e.target.value ? +e.target.value : null }; setResultScorers(next);
-                      }} placeholder="min" className="w-14 bg-gray-800 border border-gray-600 rounded px-2 py-1 text-white text-xs" />
+                      }} placeholder="min" className="w-14 bg-input border border-border-input rounded px-2 py-1 text-white text-xs" />
                       <button onClick={() => setResultScorers(resultScorers.filter((_, j) => j !== i))} className="text-red-400 hover:text-red-300 text-xs">✕</button>
                     </div>
                   ))}
                   <button onClick={() => setResultScorers([...resultScorers, { playerId: '', team: 'A', isGoal: true, minute: null }])}
-                    className="text-xs text-green-400 hover:text-green-300 mt-1">+ Add entry</button>
+                    className="text-xs text-brand hover:text-brand-light mt-1">+ Add entry</button>
                 </div>
 
                 <div className="flex gap-2">
@@ -275,7 +275,7 @@ function CompletedMatchCard({ match, user, onRefresh }: { match: any; user: any;
                     {loading ? 'Saving...' : 'Save Result'}
                   </button>
                   <button onClick={() => setShowResultForm(false)}
-                    className="bg-gray-700 hover:bg-gray-600 text-gray-300 px-4 py-1.5 rounded text-sm transition-colors">
+                    className="bg-active hover:bg-gray-600 text-secondary px-4 py-1.5 rounded text-sm transition-colors">
                     Cancel
                   </button>
                 </div>
@@ -337,7 +337,7 @@ function PitchView({ teamName, teamData, color }: { teamName: string; teamData: 
                 const name = nameParts.join(':');
                 return (
                   <div key={pi} className={`${colorClasses.bg} rounded-lg p-2 min-w-[100px] text-center`}>
-                    <div className="text-[10px] text-gray-400">{pos}</div>
+                    <div className="text-[10px] text-muted">{pos}</div>
                     <div className="text-xs font-bold truncate">{name}</div>
                   </div>
                 );

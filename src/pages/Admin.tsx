@@ -19,22 +19,22 @@ export function Admin() {
   return (
     <div className="space-y-6">
       <h1 className="text-3xl font-black">Admin Panel</h1>
-      <p className="text-gray-400">Manage all data in the system</p>
+      <p className="text-muted">Manage all data in the system</p>
 
       <div className="flex gap-2">
-        <button onClick={() => setTab('players')} className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${tab === 'players' ? 'bg-gray-700 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}>
+        <button onClick={() => setTab('players')} className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${tab === 'players' ? 'bg-active text-white' : 'bg-input text-muted hover:bg-active'}`}>
           Players ({players.length})
         </button>
-        <button onClick={() => setTab('teams')} className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${tab === 'teams' ? 'bg-gray-700 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}>
+        <button onClick={() => setTab('teams')} className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${tab === 'teams' ? 'bg-active text-white' : 'bg-input text-muted hover:bg-active'}`}>
           Teams ({teams.length})
         </button>
       </div>
 
       {tab === 'players' && (
-        <div className="bg-gray-900 rounded-xl border border-gray-700 overflow-hidden">
+        <div className="bg-card rounded-xl border border-border-card overflow-hidden">
           <table className="w-full">
             <thead>
-              <tr className="border-b border-gray-700 text-left text-sm text-gray-400">
+              <tr className="border-b border-border-card text-left text-sm text-muted">
                 <th className="px-4 py-3">Name</th>
                 <th className="px-4 py-3">Position</th>
                 <th className="px-4 py-3">Age</th>
@@ -45,12 +45,12 @@ export function Admin() {
             </thead>
             <tbody>
               {players.map((p) => (
-                <tr key={p.id} className="border-b border-gray-800 hover:bg-gray-800/50 text-sm">
+                <tr key={p.id} className="border-b border-border-card hover:bg-input/50 text-sm">
                   <td className="px-4 py-3 font-medium">{p.name}</td>
-                  <td className="px-4 py-3"><span className="bg-gray-700 text-xs px-2 py-0.5 rounded">{p.position}</span></td>
-                  <td className="px-4 py-3 text-gray-400">{p.age}</td>
-                  <td className="px-4 py-3 font-bold text-green-400">{p.overall}</td>
-                  <td className="px-4 py-3 text-gray-400 capitalize">{p.playingStyle}</td>
+                  <td className="px-4 py-3"><span className="bg-active text-xs px-2 py-0.5 rounded">{p.position}</span></td>
+                  <td className="px-4 py-3 text-muted">{p.age}</td>
+                  <td className="px-4 py-3 font-bold text-brand">{p.overall}</td>
+                  <td className="px-4 py-3 text-muted capitalize">{p.playingStyle}</td>
                   <td className="px-4 py-3">
                     <button onClick={async () => { if (confirm('Delete?')) { await api.deletePlayer(p.id); api.getPlayers().then(setPlayers); } }}
                       className="text-red-400 hover:text-red-300 text-xs">Delete</button>
@@ -59,15 +59,15 @@ export function Admin() {
               ))}
             </tbody>
           </table>
-          {players.length === 0 && <p className="text-center text-gray-500 py-8">No players</p>}
+          {players.length === 0 && <p className="text-center text-dim py-8">No players</p>}
         </div>
       )}
 
       {tab === 'teams' && (
-        <div className="bg-gray-900 rounded-xl border border-gray-700 overflow-hidden">
+        <div className="bg-card rounded-xl border border-border-card overflow-hidden">
           <table className="w-full">
             <thead>
-              <tr className="border-b border-gray-700 text-left text-sm text-gray-400">
+              <tr className="border-b border-border-card text-left text-sm text-muted">
                 <th className="px-4 py-3">Name</th>
                 <th className="px-4 py-3">Formation</th>
                 <th className="px-4 py-3">Players</th>
@@ -77,10 +77,10 @@ export function Admin() {
             </thead>
             <tbody>
               {teams.map((t: any) => (
-                <tr key={t.id} className="border-b border-gray-800 hover:bg-gray-800/50 text-sm">
+                <tr key={t.id} className="border-b border-border-card hover:bg-input/50 text-sm">
                   <td className="px-4 py-3 font-medium">{t.name}</td>
-                  <td className="px-4 py-3 text-gray-400">{t.formation}</td>
-                  <td className="px-4 py-3 text-gray-400">{t.players?.length || 0}</td>
+                  <td className="px-4 py-3 text-muted">{t.formation}</td>
+                  <td className="px-4 py-3 text-muted">{t.players?.length || 0}</td>
                   <td className="px-4 py-3">
                     {t.isAiGenerated
                       ? <span className="text-xs bg-purple-500/20 text-purple-400 px-2 py-0.5 rounded">AI</span>
@@ -94,7 +94,7 @@ export function Admin() {
               ))}
             </tbody>
           </table>
-          {teams.length === 0 && <p className="text-center text-gray-500 py-8">No teams</p>}
+          {teams.length === 0 && <p className="text-center text-dim py-8">No teams</p>}
         </div>
       )}
     </div>

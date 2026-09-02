@@ -49,7 +49,7 @@ function getCardGradient(position: string): string {
     ST: 'from-red-900 via-orange-800 to-red-950',
     CF: 'from-orange-900 via-amber-800 to-orange-950',
   };
-  return gradients[position] || 'from-gray-800 via-gray-700 to-gray-900';
+  return gradients[position] || 'from-card via-active to-page';
 }
 
 function getInitials(name: string): string {
@@ -116,18 +116,18 @@ export function PlayerCard({ player, onClick, selected, compact, size = 'normal'
         onClick={onClick}
         className={`w-full flex items-center gap-3 p-2 rounded-lg border transition-all ${
           selected
-            ? 'border-green-500 bg-green-500/10'
-            : 'border-gray-700 bg-gray-800/50 hover:border-gray-600 hover:bg-gray-800'
+            ? 'border-brand bg-brand/10'
+            : 'border-border-card bg-input/50 hover:border-border-input hover:bg-input'
         }`}
       >
         {showAvatar ? (
-          <img src={player.avatarUrl!} alt="" className="w-7 h-7 rounded-full object-cover border border-gray-600" onError={() => setImgError(true)} />
+          <img src={player.avatarUrl!} alt="" className="w-7 h-7 rounded-full object-cover border border-border-input" onError={() => setImgError(true)} />
         ) : (
           <div className="w-7 h-7 rounded-full bg-gradient-to-br from-gray-600 to-gray-800 flex items-center justify-center text-[9px] font-bold text-white/70">
             {getInitials(name)}
           </div>
         )}
-        <span className="bg-gray-700 text-[9px] font-bold px-1.5 py-0.5 rounded">{position}</span>
+        <span className="bg-active text-[9px] font-bold px-1.5 py-0.5 rounded">{position}</span>
         <span className="flex-1 text-sm font-medium truncate">{name}</span>
         <span className="text-sm font-black" style={{ color: getOverallColor(overall) }}>{overall}</span>
       </button>
@@ -139,8 +139,8 @@ export function PlayerCard({ player, onClick, selected, compact, size = 'normal'
   return (
     <div
       onClick={onClick}
-      className={`${cardSize} rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-green-500/10 ${
-        selected ? 'ring-2 ring-green-500 ring-offset-2 ring-offset-gray-950' : ''
+      className={`${cardSize} rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-brand/10 ${
+        selected ? 'ring-2 ring-brand ring-offset-2 ring-offset-page' : ''
       }`}
     >
       <div className={`relative bg-gradient-to-br ${getCardGradient(position)} h-full`}>

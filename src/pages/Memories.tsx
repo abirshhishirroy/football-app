@@ -120,7 +120,7 @@ export function Memories() {
   };
 
   if (loading) {
-    return <div className="flex items-center justify-center h-64 text-gray-500">Loading memories...</div>;
+    return <div className="flex items-center justify-center h-64 text-dim">Loading memories...</div>;
   }
 
   return (
@@ -128,12 +128,12 @@ export function Memories() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-black">Match Memories</h1>
-          <p className="text-gray-400 mt-1">Photos and videos from past matches</p>
+          <p className="text-muted mt-1">Photos and videos from past matches</p>
         </div>
         {isAdmin && (
           <button
             onClick={() => setShowUpload(!showUpload)}
-            className="bg-green-600 hover:bg-green-700 text-white font-semibold px-5 py-2 rounded-lg transition-colors"
+            className="bg-brand hover:bg-brand-hover text-white font-semibold px-5 py-2 rounded-lg transition-colors"
           >
             {showUpload ? 'Cancel' : '+ Upload Memory'}
           </button>
@@ -156,10 +156,10 @@ export function Memories() {
       )}
 
       {grouped.length === 0 ? (
-        <div className="bg-gray-900 rounded-xl border border-gray-700 p-12 flex flex-col items-center justify-center text-center">
+        <div className="bg-card rounded-xl border border-border-card p-12 flex flex-col items-center justify-center text-center">
           <div className="text-6xl mb-4">📸</div>
-          <h3 className="text-xl font-bold text-gray-300">No memories yet</h3>
-          <p className="text-gray-500 mt-2 max-w-md">
+          <h3 className="text-xl font-bold text-secondary">No memories yet</h3>
+          <p className="text-dim mt-2 max-w-md">
             {isAdmin ? 'Upload photos and videos from matches to create memories.' : 'No memories have been uploaded yet.'}
           </p>
         </div>
@@ -201,16 +201,16 @@ function MatchGroupCard({ group, isAdmin, onViewMemory, onDelete }: {
   const videoCount = group.memories.filter(m => m.type === 'video').length;
 
   return (
-    <div className="bg-gray-900 rounded-xl border border-gray-700 overflow-hidden">
-      <div className="p-5 border-b border-gray-700">
+    <div className="bg-card rounded-xl border border-border-card overflow-hidden">
+      <div className="p-5 border-b border-border-card">
         <div className="flex items-start justify-between">
           <div>
             <h2 className="text-lg font-bold">{group.matchTitle}</h2>
-            <p className="text-sm text-gray-400 mt-1">
+            <p className="text-sm text-muted mt-1">
               📅 {matchDate.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' })}
             </p>
           </div>
-          <div className="text-right text-sm text-gray-400">
+          <div className="text-right text-sm text-muted">
             {imageCount > 0 && <span>{imageCount} photo{imageCount !== 1 ? 's' : ''}</span>}
             {imageCount > 0 && videoCount > 0 && <span> · </span>}
             {videoCount > 0 && <span>{videoCount} video{videoCount !== 1 ? 's' : ''}</span>}
@@ -242,7 +242,7 @@ function MemoryCard({ memory, onView, onDelete }: {
 }) {
   return (
     <div className="relative group cursor-pointer" onClick={onView}>
-      <div className="aspect-square rounded-lg overflow-hidden bg-gray-800">
+      <div className="aspect-square rounded-lg overflow-hidden bg-input">
         {memory.type === 'image' ? (
           <img
             src={memory.thumbnailUrl}
@@ -266,7 +266,7 @@ function MemoryCard({ memory, onView, onDelete }: {
       </div>
 
       {memory.caption && (
-        <p className="text-xs text-gray-400 mt-1 truncate">{memory.caption}</p>
+        <p className="text-xs text-muted mt-1 truncate">{memory.caption}</p>
       )}
 
       {onDelete && (
@@ -346,7 +346,7 @@ function Lightbox({ memory, onClose, onPrev, onNext, hasPrev, hasNext }: {
           <div className="text-center mt-4 text-white">{memory.caption}</div>
         )}
 
-        <div className="text-center mt-2 text-gray-400 text-sm">
+        <div className="text-center mt-2 text-muted text-sm">
           Uploaded by {memory.uploaderName}
         </div>
       </div>
@@ -398,15 +398,15 @@ function UploadForm({ matches, onUpload, onCancel, uploading }: {
   };
 
   return (
-    <div className="bg-gray-900 rounded-xl border border-gray-700 p-6 space-y-4">
+    <div className="bg-card rounded-xl border border-border-card p-6 space-y-4">
       <h2 className="text-lg font-bold">Upload Memory</h2>
 
       <div>
-        <label className="block text-sm font-medium text-gray-300 mb-2">Select Match</label>
+        <label className="block text-sm font-medium text-secondary mb-2">Select Match</label>
         <select
           value={matchId}
           onChange={(e) => setMatchId(e.target.value)}
-          className="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-white text-sm"
+          className="w-full bg-input border border-border-input rounded-lg px-3 py-2 text-white text-sm"
         >
           <option value="">Choose a completed match...</option>
           {matches.map((m: any) => (
@@ -417,7 +417,7 @@ function UploadForm({ matches, onUpload, onCancel, uploading }: {
 
       <div
         className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
-          dragActive ? 'border-green-500 bg-green-500/10' : 'border-gray-600 hover:border-gray-500'
+          dragActive ? 'border-brand bg-brand/10' : 'border-border-input hover:border-border-input'
         }`}
         onDragOver={(e) => { e.preventDefault(); setDragActive(true); }}
         onDragLeave={() => setDragActive(false)}
@@ -438,7 +438,7 @@ function UploadForm({ matches, onUpload, onCancel, uploading }: {
             ) : (
               <video src={preview} className="max-h-40 mx-auto rounded-lg" />
             )}
-            <p className="text-sm text-gray-400">{file?.name}</p>
+            <p className="text-sm text-muted">{file?.name}</p>
             <button
               onClick={(e) => { e.stopPropagation(); setFile(null); setPreview(null); }}
               className="text-red-400 hover:text-red-300 text-sm"
@@ -449,19 +449,19 @@ function UploadForm({ matches, onUpload, onCancel, uploading }: {
         ) : (
           <div className="space-y-2">
             <div className="text-4xl">📁</div>
-            <p className="text-gray-400">Drag & drop or click to select</p>
-            <p className="text-xs text-gray-500">Images (JPG, PNG, GIF, WebP) or Videos (MP4, MOV, WebM) up to 25MB</p>
+            <p className="text-muted">Drag & drop or click to select</p>
+            <p className="text-xs text-dim">Images (JPG, PNG, GIF, WebP) or Videos (MP4, MOV, WebM) up to 25MB</p>
           </div>
         )}
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-300 mb-1">Caption (optional)</label>
+        <label className="block text-sm font-medium text-secondary mb-1">Caption (optional)</label>
         <input
           value={caption}
           onChange={(e) => setCaption(e.target.value)}
           placeholder="e.g., Goal celebration, Great save..."
-          className="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-white text-sm"
+          className="w-full bg-input border border-border-input rounded-lg px-3 py-2 text-white text-sm"
         />
       </div>
 
@@ -469,13 +469,13 @@ function UploadForm({ matches, onUpload, onCancel, uploading }: {
         <button
           onClick={handleSubmit}
           disabled={uploading || !file || !matchId}
-          className="bg-green-600 hover:bg-green-700 disabled:bg-green-800 text-white font-semibold px-6 py-2 rounded-lg transition-colors"
+          className="bg-brand hover:bg-brand-hover disabled:bg-brand-dim text-white font-semibold px-6 py-2 rounded-lg transition-colors"
         >
           {uploading ? 'Uploading...' : 'Upload'}
         </button>
         <button
           onClick={onCancel}
-          className="bg-gray-800 hover:bg-gray-700 text-gray-300 px-6 py-2 rounded-lg transition-colors"
+          className="bg-input hover:bg-active text-secondary px-6 py-2 rounded-lg transition-colors"
         >
           Cancel
         </button>

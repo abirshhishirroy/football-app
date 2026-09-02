@@ -54,20 +54,20 @@ export function ProfileSetup() {
     }
   };
 
-  const inputClass = 'w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent';
+  const inputClass = 'w-full bg-input border border-border-input rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent';
 
   return (
-    <div className="min-h-screen bg-gray-950 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-page flex items-center justify-center p-4">
       <div className="w-full max-w-2xl">
         <div className="text-center mb-8">
           <div className="text-5xl mb-3">⚽</div>
           <h1 className="text-3xl font-black text-white">Create Your Player Profile</h1>
-          <p className="text-gray-400 mt-2">Fill in your details to get your player card</p>
-          <p className="text-gray-500 text-xs mt-1">Your skill ratings will be auto-generated based on your information</p>
+          <p className="text-muted mt-2">Fill in your details to get your player card</p>
+          <p className="text-dim text-xs mt-1">Your skill ratings will be auto-generated based on your information</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="bg-gray-900 rounded-2xl border border-gray-700 p-8 space-y-6">
-          {error && <div className="bg-red-500/10 border border-red-500 text-red-400 px-4 py-2 rounded-lg text-sm">{error}</div>}
+        <form onSubmit={handleSubmit} className="bg-card rounded-2xl border border-border-card p-8 space-y-6">
+          {error && <div className="bg-danger/10 border border-danger text-danger px-4 py-2 rounded-lg text-sm">{error}</div>}
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Field label="Player Name">
@@ -77,11 +77,11 @@ export function ProfileSetup() {
               <input
                 value={avatarUrl}
                 onChange={(e) => { setAvatarUrl(e.target.value); setAvatarError(''); }}
-                className={`${inputClass} ${avatarError ? 'border-red-500 focus:ring-red-500' : ''}`}
+                className={`${inputClass} ${avatarError ? 'border-danger focus:ring-danger' : ''}`}
                 placeholder="https://example.com/photo.jpg"
               />
-              <p className="text-[11px] text-gray-500 mt-1">Paste a direct link to an image (JPG, PNG, etc.)</p>
-              {avatarError && <p className="text-[11px] text-red-400 mt-1">{avatarError}</p>}
+              <p className="text-[11px] text-dim mt-1">Paste a direct link to an image (JPG, PNG, etc.)</p>
+              {avatarError && <p className="text-[11px] text-danger mt-1">{avatarError}</p>}
             </Field>
             <Field label="Age">
               <input type="number" value={age} onChange={(e) => setAge(+e.target.value)} min={15} max={45} className={inputClass} />
@@ -108,7 +108,7 @@ export function ProfileSetup() {
           </div>
 
           <button type="submit" disabled={loading}
-            className="w-full bg-green-600 hover:bg-green-700 disabled:bg-green-800 text-white font-bold py-3 rounded-xl transition-colors text-lg">
+            className="w-full bg-brand hover:bg-brand-hover disabled:bg-brand-dim text-white font-bold py-3 rounded-xl transition-colors text-lg">
             {loading ? 'Creating Profile...' : 'Create My Player Card'}
           </button>
         </form>
@@ -120,7 +120,7 @@ export function ProfileSetup() {
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <label className="block text-sm font-medium text-gray-300 mb-1">{label}</label>
+      <label className="block text-sm font-medium text-secondary mb-1">{label}</label>
       {children}
     </div>
   );

@@ -44,7 +44,7 @@ export function Dashboard() {
   const recentMatches = matches.filter(m => m.status !== 'upcoming' || new Date(m.matchDate) < new Date());
 
   if (loading) {
-    return <div className="flex items-center justify-center h-64 text-gray-500">Loading...</div>;
+    return <div className="flex items-center justify-center h-64 text-dim">Loading...</div>;
   }
 
   if (!myPlayer) {
@@ -53,12 +53,12 @@ export function Dashboard() {
         <div className="text-center py-16">
           <div className="text-6xl mb-4">⚽</div>
           <h1 className="text-3xl font-black mb-2">Welcome, {user?.name}!</h1>
-          <p className="text-gray-400 mb-6 max-w-md mx-auto">
+          <p className="text-muted mb-6 max-w-md mx-auto">
             Create your player profile to get your personalized player card and join matches.
           </p>
           <Link
             to="/profile-setup"
-            className="inline-block bg-green-600 hover:bg-green-700 text-white font-bold px-8 py-3 rounded-xl transition-colors text-lg"
+            className="inline-block bg-brand hover:bg-brand-hover text-white font-bold px-8 py-3 rounded-xl transition-colors text-lg"
           >
             Create My Player Card
           </Link>
@@ -90,7 +90,7 @@ export function Dashboard() {
     <div className="space-y-8">
       <div>
         <h1 className="text-3xl font-black">My Home</h1>
-        <p className="text-gray-400 mt-1">Welcome back, {myPlayer.name}!</p>
+        <p className="text-muted mt-1">Welcome back, {myPlayer.name}!</p>
       </div>
 
       {/* Player Card + Quick Stats */}
@@ -105,8 +105,8 @@ export function Dashboard() {
             <StatBox label="Style" value={myPlayer.playingStyle} color="orange" />
           </div>
 
-          <div className="bg-gray-900 rounded-xl border border-gray-700 p-4">
-            <h3 className="text-sm font-bold text-gray-300 mb-3">Quick Stats</h3>
+          <div className="bg-card rounded-xl border border-border-card p-4">
+            <h3 className="text-sm font-bold text-secondary mb-3">Quick Stats</h3>
             <div className="grid grid-cols-4 md:grid-cols-7 gap-3">
               <MiniStat label="PAC" value={myPlayer.pace} />
               <MiniStat label="SHO" value={myPlayer.shooting} />
@@ -118,14 +118,14 @@ export function Dashboard() {
             </div>
             {myPlayer.archetype && (
               <div className="mt-3 text-center">
-                <span className="text-xs text-gray-400">Archetype: </span>
-                <span className="text-xs font-bold text-green-400">{myPlayer.archetype}</span>
+                <span className="text-xs text-muted">Archetype: </span>
+                <span className="text-xs font-bold text-brand">{myPlayer.archetype}</span>
               </div>
             )}
           </div>
 
           <div className="flex gap-3">
-            <Link to="/players" className="bg-gray-800 hover:bg-gray-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors">
+            <Link to="/players" className="bg-input hover:bg-active text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors">
               Edit Profile
             </Link>
             <Link to="/team-builder" className="bg-purple-600/20 hover:bg-purple-600/30 text-purple-400 text-sm font-medium px-4 py-2 rounded-lg transition-colors border border-purple-500/30">
@@ -139,13 +139,13 @@ export function Dashboard() {
       <div>
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-black">Upcoming Matches</h2>
-          <Link to="/notice" className="text-sm text-green-400 hover:text-green-300">View all →</Link>
+          <Link to="/notice" className="text-sm text-brand hover:text-brand-light">View all →</Link>
         </div>
         {upcomingMatches.length === 0 ? (
-          <div className="bg-gray-900 rounded-xl border border-gray-700 p-8 text-center">
+          <div className="bg-card rounded-xl border border-border-card p-8 text-center">
             <div className="text-4xl mb-3">📅</div>
-            <p className="text-gray-400">No upcoming matches</p>
-            <p className="text-sm text-gray-500 mt-1">Check back later or ask admin to create one</p>
+            <p className="text-muted">No upcoming matches</p>
+            <p className="text-sm text-dim mt-1">Check back later or ask admin to create one</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -166,29 +166,29 @@ export function Dashboard() {
       {/* Recent Matches */}
       {recentMatches.length > 0 && (
         <div>
-          <h2 className="text-xl font-bold mb-4 text-gray-400">Past Matches</h2>
+          <h2 className="text-xl font-bold mb-4 text-muted">Past Matches</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {recentMatches.slice(0, 4).map((match) => (
-              <div key={match.id} className="bg-gray-900/50 rounded-lg border border-gray-800 p-3">
+              <div key={match.id} className="bg-card/50 rounded-lg border border-border-card p-3">
                 <div className="flex items-center justify-between mb-1">
                   <div>
                     <span className="text-sm font-medium">{match.title}</span>
-                    <span className="text-xs text-gray-500 ml-2">{new Date(match.matchDate).toLocaleDateString()}</span>
+                    <span className="text-xs text-dim ml-2">{new Date(match.matchDate).toLocaleDateString()}</span>
                   </div>
-                  <span className={`text-xs px-2 py-0.5 rounded ${match.status === 'completed' ? 'bg-blue-500/20 text-blue-400' : match.status === 'full' ? 'bg-yellow-500/20 text-yellow-400' : 'bg-gray-700 text-gray-400'}`}>
+                  <span className={`text-xs px-2 py-0.5 rounded ${match.status === 'completed' ? 'bg-blue-500/20 text-blue-400' : match.status === 'full' ? 'bg-yellow-500/20 text-yellow-400' : 'bg-active text-muted'}`}>
                     {match.status}
                   </span>
                 </div>
                 {match.status === 'completed' && match.scoreA != null && match.scoreB != null && (
                   <div className="flex items-center gap-2 mt-1">
-                    <span className="text-sm font-bold text-green-400">{match.scoreA} - {match.scoreB}</span>
-                    <span className="text-[10px] text-gray-500">
+                    <span className="text-sm font-bold text-brand">{match.scoreA} - {match.scoreB}</span>
+                    <span className="text-[10px] text-dim">
                       {match.winner === 'draw' ? 'Draw' : match.winner ? `Team ${match.winner} won` : ''}
                     </span>
                   </div>
                 )}
                 {match.scorers && match.scorers.length > 0 && (
-                  <div className="mt-1 text-[10px] text-gray-400">
+                  <div className="mt-1 text-[10px] text-muted">
                     {match.scorers.filter((s: any) => s.isGoal).map((s: any) => `⚽ ${s.playerName}`).join(', ')}
                   </div>
                 )}
@@ -215,11 +215,11 @@ function MatchNoticeCard({ match, userId, isSignedUp, onSignup, loading }: {
   const canSignup = !isSignedUpVal && !closed;
 
   return (
-    <div className="bg-gray-900 rounded-xl border border-gray-700 p-4 hover:border-gray-600 transition-colors">
+    <div className="bg-card rounded-xl border border-border-card p-4 hover:border-border-input transition-colors">
       <div className="flex items-start justify-between mb-3">
         <div>
           <h3 className="font-bold">{match.title}</h3>
-          <p className="text-sm text-gray-400 mt-0.5">
+          <p className="text-sm text-muted mt-0.5">
             {matchDate.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
             {' at '}
             {matchDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
@@ -227,47 +227,47 @@ function MatchNoticeCard({ match, userId, isSignedUp, onSignup, loading }: {
         </div>
         <div className="text-right">
           {match.status === 'completed' && match.scoreA != null && match.scoreB != null ? (
-            <div className="text-lg font-black text-green-400">{match.scoreA} - {match.scoreB}</div>
+            <div className="text-lg font-black text-brand">{match.scoreA} - {match.scoreB}</div>
           ) : (
-            <div className="text-lg font-black text-green-400">{match.signupCount}</div>
+            <div className="text-lg font-black text-brand">{match.signupCount}</div>
           )}
-          <div className="text-[10px] text-gray-500">{match.status === 'completed' ? (match.winner === 'draw' ? 'Draw' : match.winner ? `Team ${match.winner} won` : 'completed') : 'joined'}</div>
+          <div className="text-[10px] text-dim">{match.status === 'completed' ? (match.winner === 'draw' ? 'Draw' : match.winner ? `Team ${match.winner} won` : 'completed') : 'joined'}</div>
         </div>
       </div>
 
-      {match.description && <p className="text-xs text-gray-500 mb-3 whitespace-pre-line">{match.description}</p>}
+      {match.description && <p className="text-xs text-dim mb-3 whitespace-pre-line">{match.description}</p>}
 
       {match.venueName && (
-        <p className="text-xs text-gray-400 mb-1">
+        <p className="text-xs text-muted mb-1">
           📍 {match.venueLink ? (
-            <a href={match.venueLink} target="_blank" rel="noopener noreferrer" className="text-green-400 hover:text-green-300 underline">{match.venueName}</a>
+            <a href={match.venueLink} target="_blank" rel="noopener noreferrer" className="text-brand hover:text-brand-light underline">{match.venueName}</a>
           ) : match.venueName}</p>
       )}
       {match.reportingTime && (
-        <p className="text-xs text-gray-400 mb-3">⏰ Reporting at {match.reportingTime}</p>
+        <p className="text-xs text-muted mb-3">⏰ Reporting at {match.reportingTime}</p>
       )}
 
       {match.signups && match.signups.length > 0 && (
         <div className="flex flex-wrap gap-1 mb-3">
           {match.signups.slice(0, 8).map((s: any) => (
-            <div key={s.userId} className="flex items-center gap-1 bg-gray-800 text-gray-300 text-[10px] px-2 py-0.5 rounded-full">
+            <div key={s.userId} className="flex items-center gap-1 bg-input text-secondary text-[10px] px-2 py-0.5 rounded-full">
               {s.playerAvatar ? (
                 <img src={s.playerAvatar} alt="" className="w-3.5 h-3.5 rounded-full object-cover" />
               ) : null}
               {s.name}
-              {s.playerOverall && <span className="text-green-400 font-bold">{s.playerOverall}</span>}
+              {s.playerOverall && <span className="text-brand font-bold">{s.playerOverall}</span>}
             </div>
           ))}
           {match.signups.length > 8 && (
-            <span className="text-[10px] text-gray-500 px-1">+{match.signups.length - 8} more</span>
+            <span className="text-[10px] text-dim px-1">+{match.signups.length - 8} more</span>
           )}
         </div>
       )}
 
       {match.scorers && match.scorers.length > 0 && (
-        <div className="bg-gray-800/50 rounded-lg p-2 mb-3 space-y-0.5">
+        <div className="bg-input/50 rounded-lg p-2 mb-3 space-y-0.5">
           {match.scorers.map((s: any) => (
-            <div key={s.id} className="text-[10px] text-gray-300">
+            <div key={s.id} className="text-[10px] text-secondary">
               {s.isGoal ? '⚽' : '🅰️'} {s.playerName} {s.minute != null && `(${s.minute}')`} — Team {s.team}
             </div>
           ))}
@@ -280,7 +280,7 @@ function MatchNoticeCard({ match, userId, isSignedUp, onSignup, loading }: {
         const teamB = parse(match.teamData.teamB);
         if (teamA.length === 0 && teamB.length === 0) return null;
         return (
-          <div className="bg-gray-800/50 rounded-lg p-2 mb-3 space-y-2">
+          <div className="bg-input/50 rounded-lg p-2 mb-3 space-y-2">
             <div className="text-[10px] font-bold text-purple-400 uppercase tracking-wide">Generated Teams</div>
             <div className="grid grid-cols-2 gap-2">
               <div>
@@ -288,7 +288,7 @@ function MatchNoticeCard({ match, userId, isSignedUp, onSignup, loading }: {
                 {teamA.map((p: string, i: number) => {
                   const [pos, ...nameParts] = p.split(':');
                   return (
-                    <div key={i} className="text-[10px] text-gray-300 flex items-center gap-1">
+                    <div key={i} className="text-[10px] text-secondary flex items-center gap-1">
                       <span className="text-blue-400 font-bold">{pos}</span>
                       <span>{nameParts.join(':')}</span>
                     </div>
@@ -300,7 +300,7 @@ function MatchNoticeCard({ match, userId, isSignedUp, onSignup, loading }: {
                 {teamB.map((p: string, i: number) => {
                   const [pos, ...nameParts] = p.split(':');
                   return (
-                    <div key={i} className="text-[10px] text-gray-300 flex items-center gap-1">
+                    <div key={i} className="text-[10px] text-secondary flex items-center gap-1">
                       <span className="text-orange-400 font-bold">{pos}</span>
                       <span>{nameParts.join(':')}</span>
                     </div>
@@ -313,23 +313,23 @@ function MatchNoticeCard({ match, userId, isSignedUp, onSignup, loading }: {
       })()}
 
       <div className="flex items-center justify-between">
-        <span className="text-[10px] text-gray-500 uppercase tracking-wider">{match.formation}</span>
+        <span className="text-[10px] text-dim uppercase tracking-wider">{match.formation}</span>
         {isSignedUpVal ? (
-          <span className="text-[10px] text-green-400 font-bold">✓ Playing</span>
+          <span className="text-[10px] text-brand font-bold">✓ Playing</span>
         ) : confirming ? (
           <div className="flex gap-1">
             <button onClick={() => { onSignup(); setConfirming(false); }} disabled={loading}
-              className="bg-green-600 hover:bg-green-700 text-white text-[10px] font-bold px-2 py-1 rounded transition-colors disabled:opacity-50">
+              className="bg-brand hover:bg-brand-hover text-white text-[10px] font-bold px-2 py-1 rounded transition-colors disabled:opacity-50">
               {loading ? '...' : 'Yes!'}
             </button>
             <button onClick={() => setConfirming(false)}
-              className="bg-gray-700 hover:bg-gray-600 text-gray-300 text-[10px] font-bold px-2 py-1 rounded transition-colors">
+              className="bg-active hover:bg-active text-secondary text-[10px] font-bold px-2 py-1 rounded transition-colors">
               Cancel
             </button>
           </div>
         ) : (
           <button onClick={() => setConfirming(true)} disabled={!canSignup || loading}
-            className="bg-green-600 hover:bg-green-700 text-white text-xs font-bold px-3 py-1.5 rounded-lg transition-colors disabled:opacity-50 disabled:bg-gray-700 disabled:text-gray-500">
+            className="bg-brand hover:bg-brand-hover text-white text-xs font-bold px-3 py-1.5 rounded-lg transition-colors disabled:opacity-50 disabled:bg-active disabled:text-dim">
             {closed ? (isSignedUpVal ? '✓ Playing' : 'Locked') : "I'm Playing!"}
           </button>
         )}
@@ -340,7 +340,7 @@ function MatchNoticeCard({ match, userId, isSignedUp, onSignup, loading }: {
 
 function StatBox({ label, value, color }: { label: string; value: string | number; color: string }) {
   const colors: Record<string, string> = {
-    green: 'bg-green-500/10 border-green-500/30 text-green-400',
+    green: 'bg-brand/10 border-brand/30 text-brand',
     blue: 'bg-blue-500/10 border-blue-500/30 text-blue-400',
     purple: 'bg-purple-500/10 border-purple-500/30 text-purple-400',
     orange: 'bg-orange-500/10 border-orange-500/30 text-orange-400',
@@ -348,17 +348,17 @@ function StatBox({ label, value, color }: { label: string; value: string | numbe
   return (
     <div className={`rounded-xl border p-3 ${colors[color]}`}>
       <div className="text-lg font-black">{value}</div>
-      <div className="text-[10px] text-gray-400 uppercase">{label}</div>
+      <div className="text-[10px] text-muted uppercase">{label}</div>
     </div>
   );
 }
 
 function MiniStat({ label, value }: { label: string; value: number }) {
-  const color = value >= 80 ? 'text-green-400' : value >= 65 ? 'text-yellow-400' : 'text-red-400';
+  const color = value >= 80 ? 'text-brand' : value >= 65 ? 'text-yellow-400' : 'text-red-400';
   return (
     <div className="text-center">
       <div className={`text-lg font-black ${color}`}>{value}</div>
-      <div className="text-[9px] text-gray-500 uppercase">{label}</div>
+      <div className="text-[9px] text-dim uppercase">{label}</div>
     </div>
   );
 }

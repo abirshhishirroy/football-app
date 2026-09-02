@@ -36,7 +36,7 @@ export function Profile() {
     load();
   };
 
-  if (loading) return <div className="flex items-center justify-center h-64 text-gray-500">Loading...</div>;
+  if (loading) return <div className="flex items-center justify-center h-64 text-dim">Loading...</div>;
   if (!player) return null;
 
   return (
@@ -54,8 +54,8 @@ export function Profile() {
             <StatBox label="Wins" value={player.wins ?? 0} color="orange" />
           </div>
 
-          <div className="bg-gray-900 rounded-xl border border-gray-700 p-4">
-            <h3 className="text-sm font-bold text-gray-300 mb-3">Match Statistics</h3>
+          <div className="bg-card rounded-xl border border-border-card p-4">
+            <h3 className="text-sm font-bold text-secondary mb-3">Match Statistics</h3>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               <MiniStat label="Goals" value={player.goals ?? 0} />
               <MiniStat label="Assists" value={player.assists ?? 0} />
@@ -64,8 +64,8 @@ export function Profile() {
             </div>
           </div>
 
-          <div className="bg-gray-900 rounded-xl border border-gray-700 p-4">
-            <h3 className="text-sm font-bold text-gray-300 mb-3">Skill Ratings</h3>
+          <div className="bg-card rounded-xl border border-border-card p-4">
+            <h3 className="text-sm font-bold text-secondary mb-3">Skill Ratings</h3>
             <div className="grid grid-cols-4 md:grid-cols-7 gap-3">
               <MiniStat label="PAC" value={player.pace} />
               <MiniStat label="SHO" value={player.shooting} />
@@ -77,8 +77,8 @@ export function Profile() {
             </div>
             {player.archetype && (
               <div className="mt-3 text-center">
-                <span className="text-xs text-gray-400">Archetype: </span>
-                <span className="text-xs font-bold text-green-400">{player.archetype}</span>
+                <span className="text-xs text-muted">Archetype: </span>
+                <span className="text-xs font-bold text-brand">{player.archetype}</span>
               </div>
             )}
           </div>
@@ -101,7 +101,7 @@ export function Profile() {
 
 function StatBox({ label, value, color }: { label: string; value: string | number; color: string }) {
   const colors: Record<string, string> = {
-    green: 'bg-green-500/10 border-green-500/30 text-green-400',
+    green: 'bg-brand/10 border-brand/30 text-brand',
     blue: 'bg-blue-500/10 border-blue-500/30 text-blue-400',
     purple: 'bg-purple-500/10 border-purple-500/30 text-purple-400',
     orange: 'bg-orange-500/10 border-orange-500/30 text-orange-400',
@@ -109,17 +109,17 @@ function StatBox({ label, value, color }: { label: string; value: string | numbe
   return (
     <div className={`rounded-xl border p-3 ${colors[color]}`}>
       <div className="text-lg font-black">{value}</div>
-      <div className="text-[10px] text-gray-400 uppercase">{label}</div>
+      <div className="text-[10px] text-muted uppercase">{label}</div>
     </div>
   );
 }
 
 function MiniStat({ label, value }: { label: string; value: number }) {
-  const color = value >= 80 ? 'text-green-400' : value >= 65 ? 'text-yellow-400' : 'text-red-400';
+  const color = value >= 80 ? 'text-brand' : value >= 65 ? 'text-yellow-400' : 'text-red-400';
   return (
     <div className="text-center">
       <div className={`text-lg font-black ${color}`}>{value}</div>
-      <div className="text-[9px] text-gray-500 uppercase">{label}</div>
+      <div className="text-[9px] text-dim uppercase">{label}</div>
     </div>
   );
 }

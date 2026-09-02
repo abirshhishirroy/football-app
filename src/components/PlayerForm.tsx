@@ -70,9 +70,9 @@ export function PlayerForm({ initial, onSubmit, onCancel, isAdmin = false }: Pla
   };
 
   return (
-    <form onSubmit={handleSubmit} className="bg-gray-900 rounded-xl border border-gray-700 p-6 space-y-4">
+    <form onSubmit={handleSubmit} className="bg-card rounded-xl border border-border-card p-6 space-y-4">
       <h2 className="text-lg font-bold">{initial ? 'Edit Player' : 'Add New Player'}</h2>
-      {error && <div className="bg-red-500/10 border border-red-500 text-red-400 px-4 py-2 rounded-lg text-sm">{error}</div>}
+      {error && <div className="bg-danger/10 border border-danger text-danger px-4 py-2 rounded-lg text-sm">{error}</div>}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Field label="Name">
@@ -104,15 +104,15 @@ export function PlayerForm({ initial, onSubmit, onCancel, isAdmin = false }: Pla
           <input
             value={avatarUrl}
             onChange={(e) => { setAvatarUrl(e.target.value); setAvatarError(''); }}
-            className={`${inputClass} ${avatarError ? 'border-red-500' : ''}`}
+            className={`${inputClass} ${avatarError ? 'border-danger' : ''}`}
             placeholder="https://example.com/photo.jpg"
           />
-          {avatarError && <p className="text-[11px] text-red-400 mt-1">{avatarError}</p>}
+          {avatarError && <p className="text-[11px] text-danger mt-1">{avatarError}</p>}
         </Field>
       </div>
 
       <div>
-        <h3 className="text-sm font-medium text-gray-300 mb-3">
+        <h3 className="text-sm font-medium text-secondary mb-3">
           {isAdmin ? 'Skill Ratings (editable)' : 'Skill Ratings (auto-generated)'}
         </h3>
         {isAdmin ? (
@@ -155,10 +155,10 @@ export function PlayerForm({ initial, onSubmit, onCancel, isAdmin = false }: Pla
       )}
 
       <div className="flex gap-3 pt-2">
-        <button type="submit" disabled={loading} className="bg-green-600 hover:bg-green-700 disabled:bg-green-800 text-white font-semibold px-6 py-2 rounded-lg transition-colors">
+        <button type="submit" disabled={loading} className="bg-brand hover:bg-brand-hover disabled:bg-brand-dim text-white font-semibold px-6 py-2 rounded-lg transition-colors">
           {loading ? 'Saving...' : initial ? 'Update' : 'Add Player'}
         </button>
-        <button type="button" onClick={onCancel} className="bg-gray-800 hover:bg-gray-700 text-gray-300 px-6 py-2 rounded-lg transition-colors">
+        <button type="button" onClick={onCancel} className="bg-input hover:bg-active text-secondary px-6 py-2 rounded-lg transition-colors">
           Cancel
         </button>
       </div>
@@ -169,7 +169,7 @@ export function PlayerForm({ initial, onSubmit, onCancel, isAdmin = false }: Pla
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <label className="block text-sm font-medium text-gray-300 mb-1">{label}</label>
+      <label className="block text-sm font-medium text-secondary mb-1">{label}</label>
       {children}
     </div>
   );
@@ -180,12 +180,12 @@ function Slider({ label, value, onChange }: { label: string; value: number; onCh
   return (
     <div>
       <div className="flex items-center justify-between mb-1">
-        <span className="text-xs text-gray-400">{label}</span>
+        <span className="text-xs text-muted">{label}</span>
         <span className={`text-xs font-bold ${color}`}>{value}</span>
       </div>
       <input
         type="range" min={1} max={99} value={value} onChange={(e) => onChange(+e.target.value)}
-        className="w-full h-1.5 bg-gray-700 rounded-full appearance-none cursor-pointer accent-green-500"
+        className="w-full h-1.5 bg-active rounded-full appearance-none cursor-pointer accent-brand"
       />
     </div>
   );
@@ -194,11 +194,11 @@ function Slider({ label, value, onChange }: { label: string; value: number; onCh
 function ReadOnlyStat({ label, value }: { label: string; value: number }) {
   const color = value >= 80 ? 'text-green-400' : value >= 60 ? 'text-yellow-400' : 'text-red-400';
   return (
-    <div className="bg-gray-800/50 rounded-lg p-3 text-center">
+    <div className="bg-input/50 rounded-lg p-3 text-center">
       <div className={`text-lg font-black ${color}`}>{value}</div>
-      <div className="text-[9px] text-gray-500 uppercase">{label}</div>
+      <div className="text-[9px] text-dim uppercase">{label}</div>
     </div>
   );
 }
 
-const inputClass = 'w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent';
+const inputClass = 'w-full bg-input border border-border-input rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent';

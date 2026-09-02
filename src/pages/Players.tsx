@@ -66,7 +66,7 @@ export function Players() {
         {isAdmin && (
           <button
             onClick={() => { setShowForm(!showForm); setEditing(null); }}
-            className="bg-green-600 hover:bg-green-700 text-white font-semibold px-5 py-2 rounded-lg transition-colors"
+            className="bg-brand hover:bg-brand-hover text-white font-semibold px-5 py-2 rounded-lg transition-colors"
           >
             {showForm ? 'Cancel' : '+ Add Player'}
           </button>
@@ -81,9 +81,9 @@ export function Players() {
         <input
           value={search} onChange={(e) => setSearch(e.target.value)}
           placeholder="Search players..."
-          className="flex-1 bg-gray-800 border border-gray-600 rounded-lg px-4 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+          className="flex-1 bg-input border border-border-input rounded-lg px-4 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-brand"
         />
-        <select value={filterPos} onChange={(e) => setFilterPos(e.target.value)} className="bg-gray-800 border border-gray-600 rounded-lg px-4 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-green-500">
+        <select value={filterPos} onChange={(e) => setFilterPos(e.target.value)} className="bg-input border border-border-input rounded-lg px-4 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-brand">
           <option value="all">All Positions</option>
           <option value="GK">GK</option>
           <option value="CB">CB</option>
@@ -136,24 +136,24 @@ export function Players() {
       </div>
 
       {filtered.length === 0 && (
-        <div className="text-center text-gray-500 py-12">
+        <div className="text-center text-dim py-12">
           No players found. {players.length === 0 && 'Add your first player!'}
         </div>
       )}
 
       {selectedPlayer && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50" onClick={() => setSelectedId(null)}>
-          <div className="bg-gray-900 rounded-xl border border-gray-700 p-6 max-w-md w-full" onClick={(e) => e.stopPropagation()}>
+          <div className="bg-card rounded-xl border border-border-card p-6 max-w-md w-full" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-start justify-between mb-4">
               <div>
-                <span className="bg-gray-700 text-xs font-bold px-2 py-0.5 rounded">{selectedPlayer.position}</span>
+                <span className="bg-active text-xs font-bold px-2 py-0.5 rounded">{selectedPlayer.position}</span>
                 <h2 className="text-2xl font-black mt-1">{selectedPlayer.name}</h2>
-                <p className="text-gray-400 text-sm">{selectedPlayer.age} yrs · {selectedPlayer.height}cm · {selectedPlayer.weight}kg · {selectedPlayer.playingStyle}</p>
+                <p className="text-muted text-sm">{selectedPlayer.age} yrs · {selectedPlayer.height}cm · {selectedPlayer.weight}kg · {selectedPlayer.playingStyle}</p>
                 {selectedPlayer.archetype && (
-                  <p className="text-green-400 text-xs mt-1 italic">{selectedPlayer.archetype}</p>
+                  <p className="text-brand text-xs mt-1 italic">{selectedPlayer.archetype}</p>
                 )}
               </div>
-              <div className="text-4xl font-black text-green-400">{selectedPlayer.overall}</div>
+              <div className="text-4xl font-black text-brand">{selectedPlayer.overall}</div>
             </div>
             <div className="space-y-2">
               {[
@@ -167,15 +167,15 @@ export function Players() {
                 ...(selectedPlayer.position === 'GK' ? [['Goalkeeping', selectedPlayer.goalkeeping]] : []),
               ].filter(([, v]) => v != null).map(([label, val]) => (
                 <div key={label as string} className="flex items-center gap-3">
-                  <span className="w-20 text-xs text-gray-400">{label as string}</span>
-                  <div className="flex-1 h-2 bg-gray-700 rounded-full overflow-hidden">
+                  <span className="w-20 text-xs text-muted">{label as string}</span>
+                  <div className="flex-1 h-2 bg-active rounded-full overflow-hidden">
                     <div className="h-full bg-green-500 rounded-full" style={{ width: `${val}%` }} />
                   </div>
                   <span className="w-8 text-right text-sm font-mono">{val as number}</span>
                 </div>
               ))}
             </div>
-            <button onClick={() => setSelectedId(null)} className="mt-4 w-full bg-gray-800 hover:bg-gray-700 text-white py-2 rounded-lg text-sm">Close</button>
+            <button onClick={() => setSelectedId(null)} className="mt-4 w-full bg-input hover:bg-active text-white py-2 rounded-lg text-sm">Close</button>
           </div>
         </div>
       )}
