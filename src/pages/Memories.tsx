@@ -75,8 +75,7 @@ export function Memories() {
     setUploading(true);
     try {
       await api.uploadMemory(matchId, file, caption);
-      setShowUpload(false);
-      load();
+      await load();
     } catch (err: any) {
       alert(err.message);
     } finally {
@@ -378,12 +377,16 @@ function UploadForm({ matches, onUpload, onCancel, uploading }: {
     }
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!file || !matchId) {
       alert('Please select a file and a match');
       return;
     }
-    onUpload(file, matchId, caption);
+    await onUpload(file, matchId, caption);
+    setFile(null);
+    setPreview(null);
+    setCaption('');
+    if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
   return (
