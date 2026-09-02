@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import multer from 'multer';
-import { v2 as cloudinary } from 'cloudinary';
+import cloudinary, { configureCloudinary } from '../cloudinary';
 import streamifier from 'streamifier';
 import db, { uuidv4 } from '../db';
 import { authMiddleware, adminMiddleware, AuthRequest } from '../auth';
@@ -13,6 +13,7 @@ const VIDEO_TYPES = ['video/mp4', 'video/quicktime', 'video/webm'];
 const MAX_VIDEO_DURATION = 25;
 
 function uploadToCloudinary(file: Express.Multer.File): Promise<{ url: string; thumbnailUrl: string; type: 'image' | 'video' }> {
+  configureCloudinary();
   return new Promise((resolve, reject) => {
     const isImage = IMAGE_TYPES.includes(file.mimetype);
     const isVideo = VIDEO_TYPES.includes(file.mimetype);
