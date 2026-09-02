@@ -212,14 +212,15 @@ function MatchGroupCard({ group, isAdmin, onViewMemory, onDelete }: {
       </div>
 
       <div className="p-5">
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+        <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-thin">
           {group.memories.map((memory) => (
-            <MemoryCard
-              key={memory.id}
-              memory={memory}
-              onView={() => onViewMemory(memory)}
-              onDelete={isAdmin ? () => onDelete(memory.id) : undefined}
-            />
+            <div key={memory.id} className="flex-shrink-0 w-48">
+              <MemoryCard
+                memory={memory}
+                onView={() => onViewMemory(memory)}
+                onDelete={isAdmin ? () => onDelete(memory.id) : undefined}
+              />
+            </div>
           ))}
         </div>
       </div>
