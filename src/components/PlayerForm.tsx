@@ -24,6 +24,9 @@ export function PlayerForm({ initial, onSubmit, onCancel, isAdmin = false }: Pla
   const [defending, setDefending] = useState(initial?.skillRatings?.defending ?? initial?.defending ?? 50);
   const [physical, setPhysical] = useState(initial?.skillRatings?.physical ?? initial?.physical ?? 50);
   const [goalkeeping, setGoalkeeping] = useState(initial?.skillRatings?.goalkeeping ?? initial?.goalkeeping ?? 50);
+  const [stamina, setStamina] = useState(initial?.skillRatings?.stamina ?? initial?.stamina ?? 50);
+  const [archetype, setArchetype] = useState(initial?.skillRatings?.archetype ?? initial?.archetype ?? '');
+  const [overall, setOverall] = useState(initial?.overall ?? 50);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [avatarError, setAvatarError] = useState('');
@@ -54,7 +57,9 @@ export function PlayerForm({ initial, onSubmit, onCancel, isAdmin = false }: Pla
         avatarUrl: avatarUrl || undefined,
       };
       if (isAdmin) {
-        payload.skillRatings = { pace, shooting, passing, dribbling, defending, physical, goalkeeping };
+        payload.skillRatings = { pace, shooting, passing, dribbling, defending, physical, goalkeeping, stamina, archetype };
+        payload.overall = overall;
+        payload.archetype = archetype;
       }
       await onSubmit(payload);
     } catch (err: any) {
@@ -118,7 +123,9 @@ export function PlayerForm({ initial, onSubmit, onCancel, isAdmin = false }: Pla
             <Slider label="Dribbling" value={dribbling} onChange={setDribbling} />
             <Slider label="Defending" value={defending} onChange={setDefending} />
             <Slider label="Physical" value={physical} onChange={setPhysical} />
+            <Slider label="Stamina" value={stamina} onChange={setStamina} />
             {position === 'GK' && <Slider label="Goalkeeping" value={goalkeeping} onChange={setGoalkeeping} />}
+            <Slider label="Overall" value={overall} onChange={setOverall} />
           </div>
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -128,10 +135,24 @@ export function PlayerForm({ initial, onSubmit, onCancel, isAdmin = false }: Pla
             <ReadOnlyStat label="Dribbling" value={dribbling} />
             <ReadOnlyStat label="Defending" value={defending} />
             <ReadOnlyStat label="Physical" value={physical} />
+            <ReadOnlyStat label="Stamina" value={stamina} />
             {position === 'GK' && <ReadOnlyStat label="Goalkeeping" value={goalkeeping} />}
           </div>
         )}
       </div>
+
+      {isAdmin && (
+        <div>
+          <Field label="Archetype (player style description)">
+            <input
+              value={archetype}
+              onChange={(e) => setArchetype(e.target.value)}
+              placeholder="e.g., Box-to-Box Engine, Clinical Finisher..."
+              className={inputClass}
+            />
+          </Field>
+        </div>
+      )}
 
       <div className="flex gap-3 pt-2">
         <button type="submit" disabled={loading} className="bg-green-600 hover:bg-green-700 disabled:bg-green-800 text-white font-semibold px-6 py-2 rounded-lg transition-colors">

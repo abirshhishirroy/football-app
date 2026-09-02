@@ -19,33 +19,50 @@ interface GeneratedStats {
   defending: number;
   physical: number;
   goalkeeping: number | null;
+  stamina: number;
+  archetype: string;
+  overall: number;
 }
 
 function buildPrompt(player: PlayerInput): string {
-  return `You are a football player stats generator. Given a player's physical attributes, position, and playing style, generate realistic skill ratings (1-99).
+  return `You are an expert football scout and statistician for an eFootball-style app.
+Your task is to calculate realistic, balanced attributes (scale 40-99) and an overall rating (OVR) for a weekend 5-a-side player based on their self-reported physical metrics and playing style.
 
-Player Info:
+CALIBRATION SCALE FOR AMATEUR PLAYERS:
+- 40–59: Below average / Casual
+- 60–74: Average weekend player
+- 75–84: Key team player / High fitness
+- 85–94: Standout amateur star
+- 95+: Professional level (rare)
+
+PLAYER INFO:
 - Age: ${player.age}
 - Height: ${player.height}cm
 - Weight: ${player.weight}kg
 - Position: ${player.position}
 - Playing Style: ${player.playingStyle}
-- Weekly Activity: ${player.weeklyActivity} hrs
+- Weekly Activity: ${player.weeklyActivity} hrs/week
 
-Calculation Rules:
-1. BMI = weight / ((height/100)^2)
-2. Base Pace: age<=25: 75, age 26-32: 70, age>32: 60. BMI 18.5-24.9: +5, BMI>28: -5
-3. Stamina = 50 + (weeklyActivity * 6). Use this as a baseline for Physicality.
-4. Physicality: height>180 or weight>80: +5 bonus
-5. Position Boosts: FWD: +10 shooting, +5 pace. MID: +10 passing, +5 stamina. DEF: +10 defending, +5 physicality. GK: +15 defending, -10 shooting, -10 dribbling.
-6. Style Boosts: Speedster: +8 pace, +5 dribbling. Playmaker: +8 passing, +5 dribbling. Hard Tackler: +8 defending, +5 physicality. Target Man: +8 physicality, +5 shooting.
-7. All values must be between 1-99. Clamp if rules push outside this range.
-8. For GK position, goalkeeping should be high (70-90 range based on other attributes).
+RULES:
+1. Calculate BMI internally: weight_kg / (height_m^2). Factor this into Pace, Stamina, and Agility.
+2. Primary position attributes MUST be highest (e.g., Defenders get higher Defending/Physicality, Strikers get higher Shooting/Pace).
+3. Ensure attributes are internally consistent (e.g., a heavy player with low fitness cannot have 90 Pace and 90 Stamina).
+4. For GK position, goalkeeping should be high (70-90 range based on other attributes).
+5. All values must be between 40-99. Most amateur players should be 55-80.
 
-Return ONLY a JSON object with these exact keys (no markdown, no code blocks, no explanation):
-{"pace": <number>, "shooting": <number>, "passing": <number>, "dribbling": <number>, "defending": <number>, "physical": <number>, "goalkeeping": <number or null>}
-
-goalkeeping should be null for non-GK positions.`;
+OUTPUT FORMAT: Return ONLY a valid JSON object matching this schema, with no additional markdown, prose, or code block markers:
+{
+  "bmi": float (rounded to 1 decimal),
+  "ovr": int,
+  "pace": int,
+  "shooting": int,
+  "passing": int,
+  "dribbling": int,
+  "defending": int,
+  "physicality": int,
+  "stamina": int,
+  "archetype": "string (e.g., 'Box-to-Box Engine', 'Clinical Finisher', 'Rock-Solid Stopper', 'Speedster Winger', 'Playmaker')"
+}`;
 }
 
 function clampStat(value: number): number {
@@ -55,10 +72,8 @@ function clampStat(value: number): number {
 function parseLLMResponse(content: string): GeneratedStats | null {
   try {
     let cleaned = content.trim();
-    // Remove markdown code blocks if present
     cleaned = cleaned.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '');
-    // Find JSON object in the response
-    const jsonMatch = cleaned.match(/\{[^}]+\}/);
+    const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
     if (!jsonMatch) return null;
     const parsed = JSON.parse(jsonMatch[0]);
     return {
@@ -67,61 +82,75 @@ function parseLLMResponse(content: string): GeneratedStats | null {
       passing: clampStat(parsed.passing),
       dribbling: clampStat(parsed.dribbling),
       defending: clampStat(parsed.defending),
-      physical: clampStat(parsed.physical),
+      physical: clampStat(parsed.physicality ?? parsed.physical),
       goalkeeping: parsed.goalkeeping != null ? clampStat(parsed.goalkeeping) : null,
+      stamina: clampStat(parsed.stamina),
+      archetype: typeof parsed.archetype === 'string' ? parsed.archetype : 'All-Rounder',
+      overall: clampStat(parsed.ovr ?? parsed.overall),
     };
   } catch {
     return null;
   }
 }
 
-// Fallback: generate stats deterministically without LLM
+function getArchetype(position: string, playingStyle: string): string {
+  const archetypes: Record<string, Record<string, string>> = {
+    ST: { attacking: 'Clinical Finisher', 'counter-attack': 'Poacher', balanced: 'Target Man', possession: 'False Nine', defensive: 'Defensive Striker' },
+    CF: { attacking: 'Complete Forward', 'counter-attack': 'Mobile Striker', balanced: 'Target Man', possession: 'False Nine', defensive: 'Pressing Forward' },
+    LW: { attacking: 'Speedster Winger', 'counter-attack': 'Counter Winger', balanced: 'Inverted Winger', possession: 'Playmaker', defensive: 'Tracking Winger' },
+    RW: { attacking: 'Speedster Winger', 'counter-attack': 'Counter Winger', balanced: 'Inverted Winger', possession: 'Playmaker', defensive: 'Tracking Winger' },
+    CAM: { attacking: 'Creative Playmaker', 'counter-attack': 'Shadow Striker', balanced: 'Box-to-Box Engine', possession: 'Deep-Lying Playmaker', defensive: 'Attacking Midfielder' },
+    CM: { attacking: 'Box-to-Box Engine', 'counter-attack': 'Dynamic Midfielder', balanced: 'All-Rounder', possession: 'Deep-Lying Playmaker', defensive: 'Ball-Winner' },
+    CDM: { attacking: 'Regista', 'counter-attack': 'Anchor Man', balanced: 'Holding Midfielder', possession: 'Deep-Lying Playmaker', defensive: 'Destroyer' },
+    LB: { attacking: 'Attacking Fullback', 'counter-attack': 'Overlapping Fullback', balanced: 'Complete Fullback', possession: 'Inverted Fullback', defensive: 'Defensive Fullback' },
+    RB: { attacking: 'Attacking Fullback', 'counter-attack': 'Overlapping Fullback', balanced: 'Complete Fullback', possession: 'Inverted Fullback', defensive: 'Defensive Fullback' },
+    CB: { attacking: 'Ball-Playing Defender', 'counter-attack': 'Sweeper', balanced: 'Center Back', possession: 'Libero', defensive: 'Rock-Solid Stopper' },
+    GK: { attacking: 'Sweeper Keeper', 'counter-attack': 'Shot Stopper', balanced: 'Complete Keeper', possession: 'Ball-Playing Keeper', defensive: 'Traditional Keeper' },
+  };
+  return archetypes[position]?.[playingStyle] || 'All-Rounder';
+}
+
 function generateStatsLocally(player: PlayerInput): GeneratedStats {
   const bmi = player.weight / Math.pow(player.height / 100, 2);
 
-  // Base pace by age
-  let pace = player.age <= 25 ? 75 : player.age <= 32 ? 70 : 60;
+  let pace = player.age <= 25 ? 72 : player.age <= 32 ? 67 : 58;
   if (bmi >= 18.5 && bmi <= 24.9) pace += 5;
   else if (bmi > 28) pace -= 5;
 
-  // Stamina from weekly activity
-  let stamina = 50 + player.weeklyActivity * 6;
+  let stamina = 50 + player.weeklyActivity * 3.5;
+  if (player.age <= 25) stamina += 3;
+  else if (player.age > 32) stamina -= 3;
+  stamina = Math.min(95, Math.max(40, stamina));
 
-  // Physicality baseline from stamina
-  let physical = stamina;
-  if (player.height > 180 || player.weight > 80) physical += 5;
+  let physical = 50 + (player.height > 180 ? 5 : 0) + (player.weight > 80 ? 3 : 0);
+  if (bmi > 28) physical += 3;
 
-  // Other baselines
-  let shooting = 50;
-  let passing = 50;
-  let dribbling = 50;
-  let defending = 50;
+  let shooting = 55;
+  let passing = 55;
+  let dribbling = 55;
+  let defending = 55;
 
-  // Position boosts
   switch (player.position) {
-    case 'ST': case 'CF': case 'LW': case 'RW':
-      shooting += 10; pace += 5; break;
-    case 'CM': case 'CAM': case 'CDM':
-      passing += 10; stamina += 5; break;
-    case 'CB': case 'LB': case 'RB':
-      defending += 10; physical += 5; break;
-    case 'GK':
-      defending += 15; shooting -= 10; dribbling -= 10; break;
+    case 'ST': case 'CF': shooting += 12; pace += 5; break;
+    case 'LW': case 'RW': pace += 10; dribbling += 8; break;
+    case 'CAM': passing += 10; dribbling += 8; break;
+    case 'CM': passing += 8; stamina += 5; break;
+    case 'CDM': defending += 10; physical += 5; break;
+    case 'CB': defending += 12; physical += 8; break;
+    case 'LB': case 'RB': pace += 5; defending += 8; stamina += 5; break;
+    case 'GK': defending += 15; shooting -= 10; dribbling -= 10; break;
   }
 
-  // Style boosts
   switch (player.playingStyle) {
-    case 'attacking':
-      pace += 8; dribbling += 5; break;
-    case 'possession':
-      passing += 8; dribbling += 5; break;
-    case 'defensive':
-      defending += 8; physical += 5; break;
-    case 'balanced':
-      physical += 8; shooting += 5; break;
-    case 'counter-attack':
-      pace += 8; shooting += 5; break;
+    case 'attacking': pace += 5; shooting += 5; break;
+    case 'possession': passing += 5; dribbling += 5; break;
+    case 'defensive': defending += 5; physical += 5; break;
+    case 'balanced': physical += 3; stamina += 3; break;
+    case 'counter-attack': pace += 5; shooting += 3; break;
   }
+
+  const overall = Math.round((pace * 0.15 + shooting * 0.15 + passing * 0.15 + dribbling * 0.15 + defending * 0.2 + physical * 0.1 + stamina * 0.1) *
+    (player.age <= 24 ? 1.02 : player.age <= 29 ? 1.0 : player.age <= 32 ? 0.97 : 0.93));
 
   return {
     pace: clampStat(pace),
@@ -130,7 +159,10 @@ function generateStatsLocally(player: PlayerInput): GeneratedStats {
     dribbling: clampStat(dribbling),
     defending: clampStat(defending),
     physical: clampStat(physical),
-    goalkeeping: player.position === 'GK' ? clampStat(70 + player.weeklyActivity) : null,
+    goalkeeping: player.position === 'GK' ? clampStat(70 + player.weeklyActivity * 1.5) : null,
+    stamina: clampStat(stamina),
+    archetype: getArchetype(player.position, player.playingStyle),
+    overall: clampStat(overall),
   };
 }
 

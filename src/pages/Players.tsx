@@ -149,6 +149,9 @@ export function Players() {
                 <span className="bg-gray-700 text-xs font-bold px-2 py-0.5 rounded">{selectedPlayer.position}</span>
                 <h2 className="text-2xl font-black mt-1">{selectedPlayer.name}</h2>
                 <p className="text-gray-400 text-sm">{selectedPlayer.age} yrs · {selectedPlayer.height}cm · {selectedPlayer.weight}kg · {selectedPlayer.playingStyle}</p>
+                {selectedPlayer.archetype && (
+                  <p className="text-green-400 text-xs mt-1 italic">{selectedPlayer.archetype}</p>
+                )}
               </div>
               <div className="text-4xl font-black text-green-400">{selectedPlayer.overall}</div>
             </div>
@@ -160,6 +163,7 @@ export function Players() {
                 ['Dribbling', selectedPlayer.dribbling],
                 ['Defending', selectedPlayer.defending],
                 ['Physical', selectedPlayer.physical],
+                ['Stamina', selectedPlayer.stamina],
                 ...(selectedPlayer.position === 'GK' ? [['Goalkeeping', selectedPlayer.goalkeeping]] : []),
               ].filter(([, v]) => v != null).map(([label, val]) => (
                 <div key={label as string} className="flex items-center gap-3">

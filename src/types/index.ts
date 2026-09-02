@@ -26,6 +26,8 @@ export interface SkillRatings {
   defending: number;
   physical: number;
   goalkeeping?: number;
+  stamina: number;
+  archetype: string;
 }
 
 export interface Player {
@@ -45,6 +47,8 @@ export interface Player {
   defending: number;
   physical: number;
   goalkeeping?: number;
+  stamina: number;
+  archetype: string;
   overall: number;
   avatarUrl?: string | null;
   userId?: string | null;
@@ -145,3 +149,17 @@ export const FORMATION_PRESETS: Record<string, Position[]> = {
 export const POSITIONS: Position[] = ['GK', 'CB', 'LB', 'RB', 'CDM', 'CM', 'CAM', 'LW', 'RW', 'ST', 'CF'];
 
 export const PLAYING_STYLES: PlayingStyle[] = ['defensive', 'balanced', 'attacking', 'possession', 'counter-attack'];
+
+export interface MatchMemory {
+  id: string;
+  matchId: string;
+  matchTitle: string;
+  matchDate: string;
+  url: string;
+  thumbnailUrl: string;
+  type: 'image' | 'video';
+  caption: string | null;
+  uploadedBy: string;
+  uploaderName: string;
+  createdAt: string;
+}

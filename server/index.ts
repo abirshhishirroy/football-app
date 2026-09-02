@@ -7,6 +7,7 @@ import playerRoutes from './routes/players';
 import teamRoutes from './routes/teams';
 import aiRoutes from './routes/ai';
 import matchRoutes from './routes/matches';
+import memoryRoutes from './routes/memories';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -19,6 +20,7 @@ app.use('/api/players', playerRoutes);
 app.use('/api/teams', teamRoutes);
 app.use('/api/ai', aiRoutes);
 app.use('/api/matches', matchRoutes);
+app.use('/api/memories', memoryRoutes);
 
 app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });

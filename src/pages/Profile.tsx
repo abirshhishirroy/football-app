@@ -66,14 +66,21 @@ export function Profile() {
 
           <div className="bg-gray-900 rounded-xl border border-gray-700 p-4">
             <h3 className="text-sm font-bold text-gray-300 mb-3">Skill Ratings</h3>
-            <div className="grid grid-cols-3 md:grid-cols-6 gap-3">
+            <div className="grid grid-cols-4 md:grid-cols-7 gap-3">
               <MiniStat label="PAC" value={player.pace} />
               <MiniStat label="SHO" value={player.shooting} />
               <MiniStat label="PAS" value={player.passing} />
               <MiniStat label="DRI" value={player.dribbling} />
               <MiniStat label="DEF" value={player.defending} />
               <MiniStat label="PHY" value={player.physical} />
+              <MiniStat label="STA" value={player.stamina} />
             </div>
+            {player.archetype && (
+              <div className="mt-3 text-center">
+                <span className="text-xs text-gray-400">Archetype: </span>
+                <span className="text-xs font-bold text-green-400">{player.archetype}</span>
+              </div>
+            )}
           </div>
 
           <button

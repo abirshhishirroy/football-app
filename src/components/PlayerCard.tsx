@@ -2,7 +2,7 @@ import { useState } from 'react';
 import type { Player, SkillRatings } from '../types';
 
 interface EFootballCardProps {
-  player: Partial<Player> & { skillRatings?: SkillRatings; pace?: number; shooting?: number; passing?: number; dribbling?: number; defending?: number; physical?: number; goalkeeping?: number };
+  player: Partial<Player> & { skillRatings?: SkillRatings; pace?: number; shooting?: number; passing?: number; dribbling?: number; defending?: number; physical?: number; goalkeeping?: number; stamina?: number; archetype?: string };
   onClick?: () => void;
   selected?: boolean;
   compact?: boolean;
@@ -19,6 +19,8 @@ function getSkillRatings(player: EFootballCardProps['player']): SkillRatings {
     defending: player.defending ?? 50,
     physical: player.physical ?? 50,
     goalkeeping: player.goalkeeping,
+    stamina: player.stamina ?? 50,
+    archetype: player.archetype ?? 'All-Rounder',
   };
 }
 
@@ -104,6 +106,7 @@ export function PlayerCard({ player, onClick, selected, compact, size = 'normal'
   const overall = player.overall ?? 50;
   const position = player.position ?? 'CM';
   const name = player.name ?? 'Unknown';
+  const archetype = player.archetype ?? 'All-Rounder';
   const [imgError, setImgError] = useState(false);
   const showAvatar = player.avatarUrl && !imgError;
 
@@ -180,9 +183,10 @@ export function PlayerCard({ player, onClick, selected, compact, size = 'normal'
           )}
         </div>
 
-        {/* Name */}
+        {/* Name + Archetype */}
         <div className="relative z-10 text-center px-3">
           <h3 className="text-sm font-black text-white tracking-wide leading-tight">{name.toUpperCase()}</h3>
+          <div className="text-[9px] text-white/50 mt-0.5 italic">{archetype}</div>
           {player.age && (
             <div className="flex items-center justify-center gap-2 mt-1 text-[10px] text-white/40">
               <span>{player.age} yrs</span>
@@ -199,6 +203,7 @@ export function PlayerCard({ player, onClick, selected, compact, size = 'normal'
           <StatHex label="DRI" value={sr.dribbling} />
           <StatHex label="DEF" value={sr.defending} />
           <StatHex label="PHY" value={sr.physical} />
+          <StatHex label="STA" value={sr.stamina} />
         </div>
 
         {/* Bottom stats bars (shown in large mode) */}
@@ -210,6 +215,7 @@ export function PlayerCard({ player, onClick, selected, compact, size = 'normal'
             <StatBar label="DRI" value={sr.dribbling} />
             <StatBar label="DEF" value={sr.defending} />
             <StatBar label="PHY" value={sr.physical} />
+            <StatBar label="STA" value={sr.stamina} />
           </div>
         )}
 

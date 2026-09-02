@@ -26,6 +26,8 @@ export interface SkillRatings {
   defending: number;
   physical: number;
   goalkeeping?: number;
+  stamina: number;
+  archetype: string;
 }
 
 export type Formation = string;

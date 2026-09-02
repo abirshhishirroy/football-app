@@ -107,14 +107,21 @@ export function Dashboard() {
 
           <div className="bg-gray-900 rounded-xl border border-gray-700 p-4">
             <h3 className="text-sm font-bold text-gray-300 mb-3">Quick Stats</h3>
-            <div className="grid grid-cols-3 md:grid-cols-6 gap-3">
+            <div className="grid grid-cols-4 md:grid-cols-7 gap-3">
               <MiniStat label="PAC" value={myPlayer.pace} />
               <MiniStat label="SHO" value={myPlayer.shooting} />
               <MiniStat label="PAS" value={myPlayer.passing} />
               <MiniStat label="DRI" value={myPlayer.dribbling} />
               <MiniStat label="DEF" value={myPlayer.defending} />
               <MiniStat label="PHY" value={myPlayer.physical} />
+              <MiniStat label="STA" value={myPlayer.stamina} />
             </div>
+            {myPlayer.archetype && (
+              <div className="mt-3 text-center">
+                <span className="text-xs text-gray-400">Archetype: </span>
+                <span className="text-xs font-bold text-green-400">{myPlayer.archetype}</span>
+              </div>
+            )}
           </div>
 
           <div className="flex gap-3">

@@ -8,6 +8,7 @@ const NAV_ITEMS = [
   { path: '/teams', label: 'Teams' },
   { path: '/notice', label: 'Notice Board' },
   { path: '/matches', label: 'Matches' },
+  { path: '/memories', label: 'Memories' },
 ];
 
 const PLAYER_NAV_ITEMS = [
@@ -15,6 +16,7 @@ const PLAYER_NAV_ITEMS = [
   { path: '/players', label: 'Players' },
   { path: '/notice', label: 'Notice Board' },
   { path: '/matches', label: 'Matches' },
+  { path: '/memories', label: 'Memories' },
   { path: '/profile', label: 'Profile' },
 ];
 

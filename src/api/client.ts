@@ -181,6 +181,33 @@ class ApiClient {
     });
   }
 
+  async getMemories() {
+    return this.request<any[]>('/memories');
+  }
+
+  async getMatchMemories(matchId: string) {
+    return this.request<any[]>(`/memories/${matchId}`);
+  }
+
+  async uploadMemory(matchId: string, file: File, caption: string) {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('caption', caption);
+    const token = this.getToken();
+    const res = await fetch(`${API_BASE}/memories/${matchId}`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}` },
+      body: formData,
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Upload failed');
+    return data;
+  }
+
+  async deleteMemory(id: string) {
+    return this.request<any>(`/memories/${id}`, { method: 'DELETE' });
+  }
+
   logout() {
     this.setToken(null);
   }

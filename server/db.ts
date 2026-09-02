@@ -197,6 +197,32 @@ if (tableExists('match_teams')) {
   }
 }
 
+// Add player stamina and archetype columns if missing.
+if (tableExists('players')) {
+  if (!columnExists('players', 'stamina')) {
+    db.prepare(`ALTER TABLE players ADD COLUMN stamina INTEGER NOT NULL DEFAULT 50`).run();
+  }
+  if (!columnExists('players', 'archetype')) {
+    db.prepare(`ALTER TABLE players ADD COLUMN archetype TEXT DEFAULT NULL`).run();
+  }
+}
+
+// Match memories table for photos and videos.
+db.exec(`
+  CREATE TABLE IF NOT EXISTS match_memories (
+    id TEXT PRIMARY KEY,
+    matchId TEXT NOT NULL,
+    url TEXT NOT NULL,
+    thumbnailUrl TEXT NOT NULL,
+    type TEXT NOT NULL CHECK(type IN ('image', 'video')),
+    caption TEXT DEFAULT NULL,
+    uploadedBy TEXT NOT NULL,
+    createdAt TEXT NOT NULL DEFAULT (datetime('now')),
+    FOREIGN KEY (matchId) REFERENCES matches(id) ON DELETE CASCADE,
+    FOREIGN KEY (uploadedBy) REFERENCES users(id)
+  );
+`);
+
 // Ensure the admin seed exists and has role 'admin'.
 const adminEmail = process.env.ADMIN_EMAIL || 'admin@football.com';
 const adminPassword = process.env.ADMIN_PASSWORD || 'admin123';

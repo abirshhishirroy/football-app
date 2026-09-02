@@ -10,6 +10,7 @@ import { TeamBuilder } from './pages/TeamBuilder';
 import { Teams } from './pages/Teams';
 import { Notice } from './pages/Notice';
 import { Matches } from './pages/Matches';
+import { Memories } from './pages/Memories';
 import { Admin } from './pages/Admin';
 import { Profile } from './pages/Profile';
 import { ProfileSetup } from './pages/ProfileSetup';
@@ -28,6 +29,7 @@ export default function App() {
           <Route path="/teams" element={<ProtectedRoute><Layout><Teams /></Layout></ProtectedRoute>} />
           <Route path="/notice" element={<ProtectedRoute><Layout><Notice /></Layout></ProtectedRoute>} />
           <Route path="/matches" element={<ProtectedRoute><Layout><Matches /></Layout></ProtectedRoute>} />
+          <Route path="/memories" element={<ProtectedRoute><Layout><Memories /></Layout></ProtectedRoute>} />
           <Route path="/admin" element={<ProtectedRoute><Layout><Admin /></Layout></ProtectedRoute>} />
           <Route path="/profile" element={<ProtectedRoute><Layout><Profile /></Layout></ProtectedRoute>} />
         </Routes>

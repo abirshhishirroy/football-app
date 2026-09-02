@@ -18,22 +18,22 @@ function isValidAvatarUrl(url: string | undefined | null): boolean {
 
 function calcOverall(row: any): number {
   const weights: Record<string, number> = {
-    GK: { pace: 0, shooting: 0.05, passing: 0.15, dribbling: 0.05, defending: 0.05, physical: 0.1, goalkeeping: 0.6 },
-    CB: { pace: 0.1, shooting: 0.05, passing: 0.1, dribbling: 0.05, defending: 0.4, physical: 0.3 },
-    LB: { pace: 0.2, shooting: 0.05, passing: 0.15, dribbling: 0.15, defending: 0.25, physical: 0.2 },
-    RB: { pace: 0.2, shooting: 0.05, passing: 0.15, dribbling: 0.15, defending: 0.25, physical: 0.2 },
-    CDM: { pace: 0.1, shooting: 0.05, passing: 0.2, dribbling: 0.1, defending: 0.35, physical: 0.2 },
-    CM: { pace: 0.1, shooting: 0.15, passing: 0.25, dribbling: 0.2, defending: 0.15, physical: 0.15 },
-    CAM: { pace: 0.15, shooting: 0.2, passing: 0.25, dribbling: 0.25, defending: 0.05, physical: 0.1 },
-    LW: { pace: 0.25, shooting: 0.15, passing: 0.15, dribbling: 0.25, defending: 0.05, physical: 0.15 },
-    RW: { pace: 0.25, shooting: 0.15, passing: 0.15, dribbling: 0.25, defending: 0.05, physical: 0.15 },
-    ST: { pace: 0.2, shooting: 0.3, passing: 0.1, dribbling: 0.2, defending: 0, physical: 0.2 },
-    CF: { pace: 0.15, shooting: 0.25, passing: 0.15, dribbling: 0.2, defending: 0.05, physical: 0.2 },
+    GK: { pace: 0, shooting: 0.05, passing: 0.1, dribbling: 0.05, defending: 0.05, physical: 0.1, goalkeeping: 0.5, stamina: 0.15 },
+    CB: { pace: 0.08, shooting: 0.05, passing: 0.08, dribbling: 0.04, defending: 0.35, physical: 0.25, stamina: 0.15 },
+    LB: { pace: 0.15, shooting: 0.05, passing: 0.12, dribbling: 0.12, defending: 0.2, physical: 0.15, stamina: 0.21 },
+    RB: { pace: 0.15, shooting: 0.05, passing: 0.12, dribbling: 0.12, defending: 0.2, physical: 0.15, stamina: 0.21 },
+    CDM: { pace: 0.08, shooting: 0.05, passing: 0.15, dribbling: 0.08, defending: 0.3, physical: 0.18, stamina: 0.16 },
+    CM: { pace: 0.08, shooting: 0.12, passing: 0.2, dribbling: 0.15, defending: 0.12, physical: 0.12, stamina: 0.21 },
+    CAM: { pace: 0.12, shooting: 0.15, passing: 0.2, dribbling: 0.2, defending: 0.04, physical: 0.08, stamina: 0.21 },
+    LW: { pace: 0.2, shooting: 0.12, passing: 0.12, dribbling: 0.2, defending: 0.04, physical: 0.12, stamina: 0.2 },
+    RW: { pace: 0.2, shooting: 0.12, passing: 0.12, dribbling: 0.2, defending: 0.04, physical: 0.12, stamina: 0.2 },
+    ST: { pace: 0.15, shooting: 0.25, passing: 0.08, dribbling: 0.15, defending: 0, physical: 0.17, stamina: 0.2 },
+    CF: { pace: 0.12, shooting: 0.2, passing: 0.12, dribbling: 0.15, defending: 0.04, physical: 0.17, stamina: 0.2 },
   };
   const w = weights[row.position] || weights.CM;
   let overall: number;
   if (row.position === 'GK') {
-    overall = (row.goalkeeping || 50) * 0.6 + row.physical * 0.15 + row.pace * 0.1 + row.passing * 0.15;
+    overall = (row.goalkeeping || 50) * 0.5 + row.physical * 0.1 + row.pace * 0.1 + row.passing * 0.1 + (row.stamina || 50) * 0.2;
   } else {
     overall =
       row.pace * w.pace +
@@ -41,11 +41,11 @@ function calcOverall(row: any): number {
       row.passing * w.passing +
       row.dribbling * w.dribbling +
       row.defending * w.defending +
-      row.physical * w.physical;
+      row.physical * w.physical +
+      (row.stamina || 50) * w.stamina;
   }
   const ageFactor = row.age <= 24 ? 1.02 : row.age <= 29 ? 1.0 : row.age <= 32 ? 0.97 : 0.93;
-  const activityFactor = 0.85 + (row.weeklyActivity / 20) * 0.15;
-  overall = Math.round(overall * ageFactor * activityFactor);
+  overall = Math.round(overall * ageFactor);
   return Math.min(99, Math.max(1, overall));
 }
 
@@ -68,7 +68,7 @@ router.get('/:id', authMiddleware, (req, res) => {
 
 router.post('/', authMiddleware, async (req: AuthRequest, res) => {
   try {
-    const { name, age, height, weight, position, playingStyle, weeklyActivity, skillRatings, avatarUrl, userId } = req.body;
+    const { name, age, height, weight, position, playingStyle, weeklyActivity, skillRatings, avatarUrl, userId, overall: adminOverall } = req.body;
     if (!name || !age || !height || !weight || !position || !playingStyle) {
       return res.status(400).json({ error: 'All required fields must be provided' });
     }
@@ -86,6 +86,8 @@ router.post('/', authMiddleware, async (req: AuthRequest, res) => {
         defending: skillRatings.defending || 50,
         physical: skillRatings.physical || 50,
         goalkeeping: skillRatings.goalkeeping,
+        stamina: skillRatings.stamina || 50,
+        archetype: skillRatings.archetype || 'All-Rounder',
       };
     } else {
       stats = await generatePlayerStats({
@@ -94,28 +96,16 @@ router.post('/', authMiddleware, async (req: AuthRequest, res) => {
       });
     }
 
-    const row = {
-      pace: stats.pace,
-      shooting: stats.shooting,
-      passing: stats.passing,
-      dribbling: stats.dribbling,
-      defending: stats.defending,
-      physical: stats.physical,
-      goalkeeping: stats.goalkeeping,
-      position,
-      age,
-      weeklyActivity: weeklyActivity || 0,
-    };
-    const overall = calcOverall(row);
+    const overall = req.user!.role === 'admin' && adminOverall != null ? Math.min(99, Math.max(1, Number(adminOverall))) : stats.overall;
     const id = uuidv4();
     const ownerId = req.user!.role === 'admin' ? (userId || null) : req.user!.id;
     db.prepare(`
       INSERT INTO players (id, name, age, height, weight, position, playingStyle, weeklyActivity,
-        pace, shooting, passing, dribbling, defending, physical, goalkeeping, overall, avatarUrl, userId, createdBy)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        pace, shooting, passing, dribbling, defending, physical, goalkeeping, stamina, archetype, overall, avatarUrl, userId, createdBy)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).run(id, name, age, height, weight, position, playingStyle, weeklyActivity || 0,
       stats.pace, stats.shooting, stats.passing, stats.dribbling, stats.defending, stats.physical, stats.goalkeeping,
-      overall, avatarUrl || null, ownerId, req.user!.id);
+      stats.stamina, stats.archetype, overall, avatarUrl || null, ownerId, req.user!.id);
     const player = db.prepare('SELECT * FROM players WHERE id = ?').get(id);
     res.status(201).json(player);
   } catch (err: any) {
@@ -135,7 +125,7 @@ router.put('/:id', authMiddleware, (req: AuthRequest, res) => {
       return res.status(403).json({ error: 'You can only edit your own profile' });
     }
 
-    const { name, age, height, weight, position, playingStyle, weeklyActivity, skillRatings, avatarUrl } = req.body;
+    const { name, age, height, weight, position, playingStyle, weeklyActivity, skillRatings, avatarUrl, overall: adminOverall, archetype: adminArchetype } = req.body;
     if (avatarUrl !== undefined && !isValidAvatarUrl(avatarUrl)) {
       return res.status(400).json({ error: 'Invalid photo URL. Must start with http:// or https://' });
     }
@@ -147,23 +137,25 @@ router.put('/:id', authMiddleware, (req: AuthRequest, res) => {
       defending: skillRatings?.defending ?? existing.defending,
       physical: skillRatings?.physical ?? existing.physical,
       goalkeeping: skillRatings?.goalkeeping ?? existing.goalkeeping,
+      stamina: skillRatings?.stamina ?? existing.stamina,
       position: position || existing.position,
       age: age ?? existing.age,
       weeklyActivity: weeklyActivity ?? existing.weeklyActivity,
     };
-    const overall = calcOverall(row);
+    const overall = req.user!.role === 'admin' && adminOverall != null ? Math.min(99, Math.max(1, Number(adminOverall))) : calcOverall(row);
+    const archetype = adminArchetype || existing.archetype;
 
     db.prepare(`
       UPDATE players SET name=?, age=?, height=?, weight=?, position=?, playingStyle=?,
         weeklyActivity=?, pace=?, shooting=?, passing=?, dribbling=?, defending=?, physical=?,
-        goalkeeping=?, overall=?, avatarUrl=?
+        goalkeeping=?, stamina=?, archetype=?, overall=?, avatarUrl=?
       WHERE id=?
     `).run(
       name || existing.name, age ?? existing.age, height ?? existing.height,
       weight ?? existing.weight, position || existing.position,
       playingStyle || existing.playingStyle, weeklyActivity ?? existing.weeklyActivity,
       row.pace, row.shooting, row.passing, row.dribbling, row.defending, row.physical,
-      row.goalkeeping, overall, avatarUrl !== undefined ? avatarUrl : existing.avatarUrl, req.params.id
+      row.goalkeeping, row.stamina, archetype, overall, avatarUrl !== undefined ? avatarUrl : existing.avatarUrl, req.params.id
     );
     const player = db.prepare('SELECT * FROM players WHERE id = ?').get(req.params.id);
     res.json(player);
@@ -194,6 +186,7 @@ router.post('/:id/generate-stats', authMiddleware, adminMiddleware, async (req: 
       defending: stats.defending,
       physical: stats.physical,
       goalkeeping: stats.goalkeeping,
+      stamina: stats.stamina,
       position: existing.position,
       age: existing.age,
       weeklyActivity: existing.weeklyActivity,
@@ -202,10 +195,10 @@ router.post('/:id/generate-stats', authMiddleware, adminMiddleware, async (req: 
 
     db.prepare(`
       UPDATE players SET pace=?, shooting=?, passing=?, dribbling=?, defending=?, physical=?,
-        goalkeeping=?, overall=?
+        goalkeeping=?, stamina=?, archetype=?, overall=?
       WHERE id=?
     `).run(stats.pace, stats.shooting, stats.passing, stats.dribbling, stats.defending,
-      stats.physical, stats.goalkeeping, overall, req.params.id);
+      stats.physical, stats.goalkeeping, stats.stamina, stats.archetype, overall, req.params.id);
 
     const player = db.prepare('SELECT * FROM players WHERE id = ?').get(req.params.id);
     res.json(player);
