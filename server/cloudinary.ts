@@ -21,12 +21,6 @@ export function configureCloudinary() {
   config.api_key = config.api_key || process.env.CLOUDINARY_API_KEY;
   config.api_secret = config.api_secret || process.env.CLOUDINARY_API_SECRET;
 
-  console.log('[cloudinary] Config:', {
-    cloud_name: config.cloud_name ? '✓' : '✗',
-    api_key: config.api_key ? '✓' : '✗',
-    api_secret: config.api_secret ? '✓' : '✗',
-  });
-
   cloudinary.config(config as any);
 }
 

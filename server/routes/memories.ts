@@ -65,8 +65,6 @@ router.post('/:matchId', authMiddleware, adminMiddleware, upload.single('file'),
     const { matchId } = req.params;
     const { caption } = req.body;
 
-    console.log(`[memory] Upload request for match: ${matchId}`);
-
     const match = db.prepare('SELECT id FROM matches WHERE id = ?').get(matchId);
     if (!match) return res.status(404).json({ error: 'Match not found' });
 
@@ -76,22 +74,13 @@ router.post('/:matchId', authMiddleware, adminMiddleware, upload.single('file'),
       return res.status(400).json({ error: 'File size must be less than 25MB' });
     }
 
-    console.log(`[memory] File: ${req.file.originalname}, size: ${req.file.size}, type: ${req.file.mimetype}`);
-
     const { url, thumbnailUrl, type } = await uploadToCloudinary(req.file);
-    console.log(`[memory] Cloudinary URL: ${url}`);
-
-    const beforeCount = db.prepare('SELECT COUNT(*) as count FROM match_memories WHERE matchId = ?').get(matchId) as any;
-    console.log(`[memory] DB count BEFORE insert for match ${matchId}: ${beforeCount.count}`);
 
     const id = uuidv4();
     db.prepare(`
       INSERT INTO match_memories (id, matchId, url, thumbnailUrl, type, caption, uploadedBy)
       VALUES (?, ?, ?, ?, ?, ?, ?)
     `).run(id, matchId, url, thumbnailUrl, type, caption || null, req.user!.id);
-
-    const afterCount = db.prepare('SELECT COUNT(*) as count FROM match_memories WHERE matchId = ?').get(matchId) as any;
-    console.log(`[memory] DB count AFTER insert for match ${matchId}: ${afterCount.count}`);
 
     const memory = db.prepare(`
       SELECT m.*, u.name as uploaderName, mt.title as matchTitle, mt.matchDate
@@ -101,7 +90,6 @@ router.post('/:matchId', authMiddleware, adminMiddleware, upload.single('file'),
       WHERE m.id = ?
     `).get(id);
 
-    console.log(`[memory] Created memory ${id} successfully`);
     res.status(201).json(memory);
   } catch (err: any) {
     console.error('[memory] Upload error:', err);
@@ -117,7 +105,6 @@ router.get('/', authMiddleware, (_req, res) => {
     JOIN matches mt ON m.matchId = mt.id
     ORDER BY mt.matchDate DESC, m.createdAt ASC
   `).all();
-  console.log(`[memory] GET /memories returning ${memories.length} total memories`);
   res.json(memories);
 });
 

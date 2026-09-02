@@ -70,10 +70,6 @@ export function Memories() {
   const refreshMemories = async () => {
     try {
       const memoriesData = await api.getMemories();
-      console.log('[memories] Refreshed:', memoriesData.length, 'total memories');
-      memoriesData.forEach((m: Memory) => {
-        console.log(`[memories] - ${m.id}: ${m.matchTitle} | ${m.type} | ${m.url.substring(0, 60)}...`);
-      });
       setMemories(memoriesData);
     } catch (err: any) {
       setError(err.message);
@@ -87,13 +83,10 @@ export function Memories() {
     }
     setUploading(true);
     try {
-      const result = await api.uploadMemory(matchId, file, caption);
-      console.log('[memories] Upload result:', result);
-      console.log('[memories] Now refreshing memories...');
+      await api.uploadMemory(matchId, file, caption);
       await refreshMemories();
-      console.log('[memories] Refresh complete');
     } catch (err: any) {
-      alert('Upload failed: ' + err.message);
+      alert(err.message);
     } finally {
       setUploading(false);
     }
@@ -162,13 +155,6 @@ export function Memories() {
         />
       )}
 
-      <div className="bg-gray-800 rounded-lg p-3 text-xs text-gray-400 font-mono">
-        Debug: {memories.length} memories, {grouped.length} groups
-        {memories.length > 0 && (
-          <span> — IDs: {memories.map(m => m.id.slice(0, 8)).join(', ')}</span>
-        )}
-      </div>
-
       {grouped.length === 0 ? (
         <div className="bg-gray-900 rounded-xl border border-gray-700 p-12 flex flex-col items-center justify-center text-center">
           <div className="text-6xl mb-4">📸</div>
@@ -180,17 +166,12 @@ export function Memories() {
       ) : (
         <div className="space-y-8">
           {grouped.map((group) => (
-            <div key={group.matchId}>
-              <div className="text-xs text-gray-500 mb-1 font-mono">
-                Group "{group.matchTitle}" has {group.memories.length} items
-              </div>
-              <MatchGroupCard
+            <MatchGroupCard
                 group={group}
                 isAdmin={isAdmin}
                 onViewMemory={(memory) => openLightbox(memory, group.memories)}
                 onDelete={handleDelete}
               />
-            </div>
           ))}
         </div>
       )}
@@ -409,9 +390,7 @@ function UploadForm({ matches, onUpload, onCancel, uploading }: {
       alert('Please select a file and a match');
       return;
     }
-    console.log('[memories] handleSubmit starting upload for match:', matchId, 'file:', file.name);
     await onUpload(file, matchId, caption);
-    console.log('[memories] handleSubmit upload completed');
     setFile(null);
     setPreview(null);
     setCaption('');
