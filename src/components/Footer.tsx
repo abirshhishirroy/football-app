@@ -13,7 +13,7 @@ export function Footer() {
             Discord
           </a>
         </div>
-        <p className="text-gray-600 text-xs text-right w-full">
+        <p className="text-gray-600 text-xs text-center">
           © Noob Squad All Rights Reserved. Developed by Abir Roy
         </p>
       </div>
