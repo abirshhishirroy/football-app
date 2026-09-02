@@ -5,6 +5,10 @@ import bcrypt from 'bcryptjs';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'football-app-secret-key-2024';
 
+if (JWT_SECRET === 'football-app-secret-key-2024') {
+  console.warn('[security] Using default JWT_SECRET. Set JWT_SECRET environment variable in production.');
+}
+
 export interface AuthRequest extends Request {
   user?: { id: string; email: string; name: string; role: string };
 }

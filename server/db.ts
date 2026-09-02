@@ -198,15 +198,18 @@ if (tableExists('match_teams')) {
 }
 
 // Ensure the admin seed exists and has role 'admin'.
-const seededAdmin = db.prepare('SELECT id, role FROM users WHERE email = ?').get('admin@football.com') as any;
+const adminEmail = process.env.ADMIN_EMAIL || 'admin@football.com';
+const adminPassword = process.env.ADMIN_PASSWORD || 'admin123';
+
+const seededAdmin = db.prepare('SELECT id, role FROM users WHERE email = ?').get(adminEmail) as any;
 if (seededAdmin) {
   if (seededAdmin.role !== 'admin') {
-    db.prepare("UPDATE users SET role = 'admin' WHERE email = ?").run('admin@football.com');
+    db.prepare("UPDATE users SET role = 'admin' WHERE email = ?").run(adminEmail);
   }
 } else {
-  const adminPassword = bcrypt.hashSync('admin123', 10);
+  const hashedPassword = bcrypt.hashSync(adminPassword, 10);
   db.prepare('INSERT INTO users (id, email, password, name, role) VALUES (?, ?, ?, ?, ?)').run(
-    uuidv4(), 'admin@football.com', adminPassword, 'Admin', 'admin'
+    uuidv4(), adminEmail, hashedPassword, 'Admin', 'admin'
   );
 }
 
