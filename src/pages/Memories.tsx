@@ -89,9 +89,11 @@ export function Memories() {
     try {
       const result = await api.uploadMemory(matchId, file, caption);
       console.log('[memories] Upload result:', result);
+      console.log('[memories] Now refreshing memories...');
       await refreshMemories();
+      console.log('[memories] Refresh complete');
     } catch (err: any) {
-      alert(err.message);
+      alert('Upload failed: ' + err.message);
     } finally {
       setUploading(false);
     }
@@ -407,7 +409,9 @@ function UploadForm({ matches, onUpload, onCancel, uploading }: {
       alert('Please select a file and a match');
       return;
     }
+    console.log('[memories] handleSubmit starting upload for match:', matchId, 'file:', file.name);
     await onUpload(file, matchId, caption);
+    console.log('[memories] handleSubmit upload completed');
     setFile(null);
     setPreview(null);
     setCaption('');
