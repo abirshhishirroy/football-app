@@ -212,8 +212,6 @@ football-app/
 |----------|----------|---------|-------------|
 | `PORT` | No | `3001` | Server port |
 | `JWT_SECRET` | Yes* | None | JWT signing secret (*required in production, development uses fallback) |
-| `ADMIN_EMAIL` | No | `admin@football.com` | Admin user email for initial seed |
-| `ADMIN_PASSWORD` | No | `admin123` | Admin user password for initial seed |
 | `OPENROUTER_API_KEY` | No | `null` | OpenRouter API key for LLM stat generation (falls back to local generation) |
 | `RAILWAY_VOLUME_MOUNT_PATH` | No | `null` | Railway persistent volume path |
 
