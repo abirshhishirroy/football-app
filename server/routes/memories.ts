@@ -1,8 +1,9 @@
 import { Router } from 'express';
 import multer from 'multer';
+import { v2 as cloudinary } from 'cloudinary';
+import streamifier from 'streamifier';
 import db, { uuidv4 } from '../db';
 import { authMiddleware, adminMiddleware, AuthRequest } from '../auth';
-import cloudinary from '../cloudinary';
 
 const router = Router();
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 25 * 1024 * 1024 } });
@@ -21,14 +22,11 @@ function uploadToCloudinary(file: Express.Multer.File): Promise<{ url: string; t
     }
 
     const resourceType = isVideo ? 'video' : 'image';
-    const uniqueId = `memories/${uuidv4()}`;
-    const base64 = `data:${file.mimetype};base64,${file.buffer.toString('base64')}`;
+    const uniqueId = `football-memories/${Date.now()}_${uuidv4()}`;
 
     const uploadOptions: any = {
       resource_type: resourceType,
       public_id: uniqueId,
-      unique_filename: true,
-      overwrite: false,
     };
 
     if (isImage) {
@@ -38,8 +36,11 @@ function uploadToCloudinary(file: Express.Multer.File): Promise<{ url: string; t
       uploadOptions.eager = [{ transformation: [{ quality: 'auto:low', width: 400, crop: 'limit', fetch_format: 'auto' }] }];
     }
 
-    cloudinary.uploader.upload(base64, uploadOptions, (error, result) => {
-      if (error) return reject(error);
+    const uploadStream = cloudinary.uploader.upload_stream(uploadOptions, (error, result) => {
+      if (error) {
+        console.error('[memory] Cloudinary upload_stream error:', error);
+        return reject(error);
+      }
       if (!result) return reject(new Error('Upload failed'));
 
       const url = result.secure_url;
@@ -53,6 +54,8 @@ function uploadToCloudinary(file: Express.Multer.File): Promise<{ url: string; t
 
       resolve({ url, thumbnailUrl, type: isVideo ? 'video' : 'image' });
     });
+
+    streamifier.createReadStream(file.buffer).pipe(uploadStream);
   });
 }
 
@@ -60,6 +63,8 @@ router.post('/:matchId', authMiddleware, adminMiddleware, upload.single('file'),
   try {
     const { matchId } = req.params;
     const { caption } = req.body;
+
+    console.log(`[memory] Upload request for match: ${matchId}`);
 
     const match = db.prepare('SELECT id FROM matches WHERE id = ?').get(matchId);
     if (!match) return res.status(404).json({ error: 'Match not found' });
@@ -70,7 +75,13 @@ router.post('/:matchId', authMiddleware, adminMiddleware, upload.single('file'),
       return res.status(400).json({ error: 'File size must be less than 25MB' });
     }
 
+    console.log(`[memory] File: ${req.file.originalname}, size: ${req.file.size}, type: ${req.file.mimetype}`);
+
     const { url, thumbnailUrl, type } = await uploadToCloudinary(req.file);
+    console.log(`[memory] Cloudinary URL: ${url}`);
+
+    const beforeCount = db.prepare('SELECT COUNT(*) as count FROM match_memories WHERE matchId = ?').get(matchId) as any;
+    console.log(`[memory] DB count BEFORE insert for match ${matchId}: ${beforeCount.count}`);
 
     const id = uuidv4();
     db.prepare(`
@@ -78,8 +89,8 @@ router.post('/:matchId', authMiddleware, adminMiddleware, upload.single('file'),
       VALUES (?, ?, ?, ?, ?, ?, ?)
     `).run(id, matchId, url, thumbnailUrl, type, caption || null, req.user!.id);
 
-    const totalCount = db.prepare('SELECT COUNT(*) as count FROM match_memories WHERE matchId = ?').get(matchId) as any;
-    console.log(`[memory] Uploaded memory ${id} for match ${matchId}. Total memories for this match: ${totalCount.count}`);
+    const afterCount = db.prepare('SELECT COUNT(*) as count FROM match_memories WHERE matchId = ?').get(matchId) as any;
+    console.log(`[memory] DB count AFTER insert for match ${matchId}: ${afterCount.count}`);
 
     const memory = db.prepare(`
       SELECT m.*, u.name as uploaderName, mt.title as matchTitle, mt.matchDate
@@ -89,9 +100,10 @@ router.post('/:matchId', authMiddleware, adminMiddleware, upload.single('file'),
       WHERE m.id = ?
     `).get(id);
 
+    console.log(`[memory] Created memory ${id} successfully`);
     res.status(201).json(memory);
   } catch (err: any) {
-    console.error('Memory upload error:', err);
+    console.error('[memory] Upload error:', err);
     res.status(500).json({ error: err.message || 'Failed to upload memory' });
   }
 });
@@ -104,6 +116,7 @@ router.get('/', authMiddleware, (_req, res) => {
     JOIN matches mt ON m.matchId = mt.id
     ORDER BY mt.matchDate DESC, m.createdAt ASC
   `).all();
+  console.log(`[memory] GET /memories returning ${memories.length} total memories`);
   res.json(memories);
 });
 

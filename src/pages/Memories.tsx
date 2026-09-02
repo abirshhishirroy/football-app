@@ -67,6 +67,19 @@ export function Memories() {
     return acc;
   }, [] as MatchGroup[]);
 
+  const refreshMemories = async () => {
+    try {
+      const memoriesData = await api.getMemories();
+      console.log('[memories] Refreshed:', memoriesData.length, 'total memories');
+      memoriesData.forEach((m: Memory) => {
+        console.log(`[memories] - ${m.id}: ${m.matchTitle} | ${m.type} | ${m.url.substring(0, 60)}...`);
+      });
+      setMemories(memoriesData);
+    } catch (err: any) {
+      setError(err.message);
+    }
+  };
+
   const handleUpload = async (file: File, matchId: string, caption: string) => {
     if (file.size > 25 * 1024 * 1024) {
       alert('File size must be less than 25MB');
@@ -74,8 +87,9 @@ export function Memories() {
     }
     setUploading(true);
     try {
-      await api.uploadMemory(matchId, file, caption);
-      await load();
+      const result = await api.uploadMemory(matchId, file, caption);
+      console.log('[memories] Upload result:', result);
+      await refreshMemories();
     } catch (err: any) {
       alert(err.message);
     } finally {

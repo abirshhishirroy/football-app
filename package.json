@@ -25,6 +25,7 @@
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "react-router-dom": "^6.30.6",
+    "streamifier": "^0.1.1",
     "tsx": "^4.23.12",
     "uuid": "^14.0.2"
   },
@@ -39,6 +40,7 @@
     "@types/node": "^24.13.3",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.4",
+    "@types/streamifier": "^0.1.2",
     "@types/uuid": "^11.0.0",
     "@vitejs/plugin-react": "^6.1.0",
     "concurrently": "^10.0.5",
