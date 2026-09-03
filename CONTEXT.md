@@ -16,6 +16,7 @@ A full-stack football (soccer) management application designed for amateur footb
 - Match fees field for player cost information
 - Collapsible match statistics cards
 - Player statistics aggregation (goals, assists, wins, matches played)
+- Match memories — photo/video upload to Cloudinary with horizontal gallery
 - Admin and player role-based access control
 
 ---
@@ -28,7 +29,7 @@ A full-stack football (soccer) management application designed for amateur footb
 | React | 19.x | UI framework |
 | TypeScript | 6.x | Type safety |
 | Vite | 8.x | Build tool & dev server |
-| Tailwind CSS | 4.x | Styling (via @tailwindcss/vite plugin) |
+| Tailwind CSS | 4.x | Styling (via @tailwindcss/vite plugin, CSS-first config with @theme) |
 | React Router | 6.x | Client-side routing |
 
 ### Backend
@@ -40,18 +41,22 @@ A full-stack football (soccer) management application designed for amateur footb
 | bcryptjs | 3.x | Password hashing |
 | uuid | 14.x | Unique ID generation |
 | tsx | 4.x | TypeScript execution |
+| cloudinary | 2.x | Image/video storage for match memories |
+| streamifier | 1.x | Buffer-to-stream conversion for Cloudinary uploads |
+| multer | 2.x | Multipart file upload handling (memory storage) |
 
 ### AI/LLM Integration
 | Technology | Purpose |
 |------------|---------|
-| OpenRouter API | External LLM API for player stat generation |
-| qwen/qwen3-coder:free | Model used for generating player statistics |
+| OpenRouter API | External LLM API for player stat refinement |
+| qwen/qwen3-coder:free | Model used for fine-tuning pre-calculated player stats |
+| Deterministic Math Pipeline | TypeScript function calculating baseline stats from BMI, position weights, playing style, and age factors |
 
 ### Development Tools
 | Tool | Purpose |
 |------|---------|
 | oxlint | Linting |
-| esbuild | Server bundling |
+| esbuild | Server bundling (outputs to dist-server/) |
 | concurrently | Parallel dev server execution |
 
 ---
@@ -64,20 +69,22 @@ football-app/
 │   ├── index.ts              # Server entry point (port 3001)
 │   ├── db.ts                 # SQLite database setup & migrations
 │   ├── auth.ts               # JWT auth middleware & helpers
-│   ├── llm.ts                # OpenRouter LLM integration for stat generation
+│   ├── cloudinary.ts         # Cloudinary SDK config (lazy init, reads env vars)
+│   ├── llm.ts                # Hybrid stat generation: deterministic math pipeline + OpenRouter LLM refinement
 │   ├── types.ts              # TypeScript types (Position, Formation, etc.)
 │   ├── routes/
 │   │   ├── auth.ts           # POST /register, /login, GET /me
 │   │   ├── players.ts        # CRUD for players, stat generation
 │   │   ├── teams.ts          # CRUD for teams
 │   │   ├── matches.ts        # Match management, signups, team generation, results
+│   │   ├── memories.ts       # Match memory upload/list/delete (Cloudinary)
 │   │   └── ai.ts             # AI team generation endpoint
 │   └── ai/
 │       └── teamBuilder.ts    # Team balancing algorithm
 ├── src/                       # React frontend
 │   ├── main.tsx              # App entry
 │   ├── App.tsx               # Router configuration
-│   ├── index.css             # Global styles
+│   ├── index.css             # Global styles + @theme block (custom color tokens)
 │   ├── api/
 │   │   └── client.ts         # API client class (token management, all endpoints)
 │   ├── context/
@@ -85,7 +92,8 @@ football-app/
 │   ├── components/
 │   │   ├── Layout.tsx        # Main layout wrapper
 │   │   ├── Navbar.tsx        # Navigation bar
-│   │   ├── PlayerCard.tsx    # Player profile card display
+│   │   ├── Footer.tsx        # Footer with social links
+│   │   ├── PlayerCard.tsx    # Player profile card display (FIFA-style)
 │   │   ├── PlayerForm.tsx    # Player creation/edit form
 │   │   └── ProtectedRoute.tsx # Auth route guard
 │   ├── pages/
@@ -99,13 +107,14 @@ football-app/
 │   │   ├── Teams.tsx         # Saved teams list
 │   │   ├── Notice.tsx        # Upcoming matches with signup
 │   │   ├── Matches.tsx       # Completed match statistics (collapsible cards)
+│   │   ├── Memories.tsx      # Match memories gallery with upload
 │   │   └── Admin.tsx         # Admin panel
 │   └── types/                # Frontend TypeScript types
 ├── data/
 │   └── football.db           # SQLite database file
 ├── public/                   # Static assets
 ├── dist/                     # Built frontend
-├── dist-server/              # Built backend
+├── dist-server/              # Built backend (CJS bundle via esbuild)
 ├── package.json
 ├── vite.config.ts
 ├── tsconfig.json
@@ -151,14 +160,30 @@ football-app/
 - Functional components with hooks
 - State management via React Context (AuthContext)
 - API calls centralized in `src/api/client.ts`
-- Tailwind CSS for all styling (no CSS modules)
-- Dark theme: gray-900 backgrounds, green-500 accents
+- Tailwind CSS v4 for all styling (CSS-first config with `@theme` blocks, no tailwind.config.js)
+- Bangladesh Flag + FIFA 2026 theme (gold accents, green-tinted dark backgrounds)
 - Route protection via `ProtectedRoute` wrapper component
+
+### Theme System (Tailwind v4 CSS-first)
+Custom color tokens defined in `src/index.css` via `@theme` block:
+- `--color-page` (#0a0f0d) — page background with subtle green tint
+- `--color-card` (#111c17) — card/panel backgrounds
+- `--color-input` (#1a2e24) — input fields
+- `--color-active` (#223828) — active/selected states
+- `--color-brand` (#D4AF37) — primary accent (FIFA gold)
+- `--color-brand-hover` (#C5A028) — hover state
+- `--color-brand-dim` (#8B7225) — disabled state
+- `--color-danger` (#E8192C) — delete/danger (Bangladesh red)
+- `--color-secondary` (#9CA8A3) — secondary text
+- `--color-muted` (#7A8A82) — muted text
+- `--color-dim` (#5E7069) — dim text
+- `--color-border-card` (#1f3028) — card borders
+- `--color-border-input` (#2a4035) — input borders
 
 ### Error Handling
 - Backend: try/catch in route handlers, return 4xx/5xx with `{ error: string }`
 - Frontend: `.catch()` handlers display errors via `alert()` or inline error messages
-- LLM failures gracefully fall back to local stat generation
+- LLM failures gracefully fall back to deterministic base stats
 - Database errors caught and returned as 500 responses
 
 ---
@@ -168,8 +193,10 @@ football-app/
 ### ✅ Completed Features
 - [x] User registration & login with JWT auth
 - [x] Player profile creation with AI-generated stats (or manual entry)
-- [x] Player profile editing
+- [x] Hybrid stat generation: deterministic math pipeline + LLM refinement
+- [x] Player profile editing with automatic stat regeneration
 - [x] Player overall rating calculation (position-weighted with age/activity factors)
+- [x] Player stamina field and archetype description
 - [x] Match creation (admin only)
 - [x] Match signup with deadline enforcement (24h before match)
 - [x] AI team generation with position compatibility & synergy scoring
@@ -178,7 +205,7 @@ football-app/
 - [x] Player statistics aggregation (goals, assists, matches played, wins)
 - [x] Team renaming feature
 - [x] Role-based access (admin vs player)
-- [x] Responsive UI with dark theme
+- [x] Bangladesh Flag + FIFA 2026 themed UI (gold accents, green-tinted backgrounds, subtle gradient)
 - [x] Railway deployment configuration
 - [x] Flexible formations (5v5 through 11v11) with custom formation builder
 - [x] Dual-team generation (Team A vs Team B) in Team Builder
@@ -189,6 +216,10 @@ football-app/
 - [x] Notice Board shows only upcoming matches
 - [x] Admin can delete completed matches
 - [x] Centered formation visualizations in Matches page
+- [x] Match memories — photo/video upload via Cloudinary (admin only)
+- [x] Match memories gallery with horizontal scrolling, lightbox, video player
+- [x] Multiple image uploads per match grouped together
+- [x] Cloudinary integration with lazy config initialization (env var or CLOUDINARY_URL)
 
 ### 🔄 In Progress / Known Issues
 - No test suite currently implemented
@@ -212,7 +243,13 @@ football-app/
 |----------|----------|---------|-------------|
 | `PORT` | No | `3001` | Server port |
 | `JWT_SECRET` | Yes* | None | JWT signing secret (*required in production, development uses fallback) |
+| `ADMIN_EMAIL` | No | `admin@football.com` | Admin account email |
+| `ADMIN_PASSWORD` | No | `admin123` | Admin account password |
 | `OPENROUTER_API_KEY` | No | `null` | OpenRouter API key for LLM stat generation (falls back to local generation) |
+| `CLOUDINARY_CLOUD_NAME` | No | `null` | Cloudinary cloud name for memory uploads |
+| `CLOUDINARY_API_KEY` | No | `null` | Cloudinary API key |
+| `CLOUDINARY_API_SECRET` | No | `null` | Cloudinary API secret |
+| `CLOUDINARY_URL` | No | `null` | Cloudinary connection string (alternative to individual vars) |
 | `RAILWAY_VOLUME_MOUNT_PATH` | No | `null` | Railway persistent volume path |
 
 **Note:** Copy `.env.example` to `.env` and update values for your environment. Never commit `.env` files to version control.
@@ -257,7 +294,8 @@ npm run lint
 - **Location:** `data/football.db`
 - **Engine:** SQLite with WAL mode
 - **Migrations:** Automatic on server startup (non-destructive, checks column existence)
-- **Seeded Data:** Admin user (`********` / `*****`) auto-created
+- **Seeded Data:** Admin user (credentials from env vars) auto-created
+- **Tables:** users, players, teams, team_players, matches, match_signups, match_results, match_scorers, match_memories
 
 ### API Endpoints Reference
 | Method | Endpoint | Auth | Admin | Description |
@@ -269,7 +307,7 @@ npm run lint
 | GET | /api/players/me | Yes | No | Get current user's player |
 | GET | /api/players/:id | Yes | No | Get player by ID |
 | POST | /api/players | Yes | No | Create player |
-| PUT | /api/players/:id | Yes | No | Update player |
+| PUT | /api/players/:id | Yes | No | Update player (auto-regenerates stats if not manually provided) |
 | DELETE | /api/players/:id | Yes | Yes | Delete player |
 | POST | /api/players/:id/generate-stats | Yes | Yes | Regenerate player stats |
 | GET | /api/teams | Yes | No | List user's teams |
@@ -289,8 +327,12 @@ npm run lint
 | POST | /api/matches/:id/result | Yes | Yes | Record match result |
 | PATCH | /api/matches/:id/teams/rename | Yes | Yes | Rename match teams |
 | DELETE | /api/matches/:id | Yes | Yes | Delete match |
+| GET | /api/memories | Yes | No | List all memories (grouped by match) |
+| GET | /api/memories/:matchId | Yes | No | List memories for a match |
+| POST | /api/memories/:matchId | Yes | Yes | Upload memory (image/video) |
+| DELETE | /api/memories/:id | Yes | Yes | Delete memory |
 | GET | /api/health | No | No | Health check |
 
 ---
 
-*Generated for persistent AI coding context. Last updated: 2026-09-02*
+*Generated for persistent AI coding context. Last updated: 2026-09-03*
