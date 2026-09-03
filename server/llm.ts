@@ -24,44 +24,145 @@ interface GeneratedStats {
   overall: number;
 }
 
-function buildPrompt(player: PlayerInput): string {
-  return `You are an expert football scout and statistician for an eFootball-style app.
-Your task is to calculate realistic, balanced attributes (scale 40-99) and an overall rating (OVR) for a weekend 5-a-side player based on their self-reported physical metrics and playing style.
+interface BaseStats {
+  pace: number;
+  shooting: number;
+  passing: number;
+  dribbling: number;
+  defending: number;
+  physical: number;
+  goalkeeping: number | null;
+  stamina: number;
+  bmi: number;
+}
 
-CALIBRATION SCALE FOR AMATEUR PLAYERS:
-- 40–59: Below average / Casual
-- 60–74: Average weekend player
-- 75–84: Key team player / High fitness
-- 85–94: Standout amateur star
-- 95+: Professional level (rare)
+function clamp(value: number, min: number, max: number): number {
+  return Math.min(max, Math.max(min, Math.round(value)));
+}
 
-PLAYER INFO:
-- Age: ${player.age}
-- Height: ${player.height}cm
-- Weight: ${player.weight}kg
-- Position: ${player.position}
-- Playing Style: ${player.playingStyle}
-- Weekly Activity: ${player.weeklyActivity} hrs/week
+function calculateBaseStats(player: PlayerInput): BaseStats {
+  const bmi = player.weight / Math.pow(player.height / 100, 2);
 
-RULES:
-1. Calculate BMI internally: weight_kg / (height_m^2). Factor this into Pace, Stamina, and Agility.
-2. Primary position attributes MUST be highest (e.g., Defenders get higher Defending/Physicality, Strikers get higher Shooting/Pace).
-3. Ensure attributes are internally consistent (e.g., a heavy player with low fitness cannot have 90 Pace and 90 Stamina).
-4. For GK position, goalkeeping should be high (70-90 range based on other attributes).
-5. All values must be between 40-99. Most amateur players should be 55-80.
+  const stats: Record<string, number> = {
+    pace: 60,
+    shooting: 50,
+    passing: 55,
+    dribbling: 55,
+    defending: 50,
+    physical: 55,
+    stamina: 50 + player.weeklyActivity * 3,
+  };
 
-OUTPUT FORMAT: Return ONLY a valid JSON object matching this schema, with no additional markdown, prose, or code block markers:
+  const positionBoosts: Record<string, Record<string, number>> = {
+    GK:  { defending: 30, physical: 15, shooting: -20, dribbling: -15 },
+    CB:  { defending: 25, physical: 20, pace: -5 },
+    LB:  { pace: 15, defending: 15, stamina: 15, passing: 5 },
+    RB:  { pace: 15, defending: 15, stamina: 15, passing: 5 },
+    CDM: { defending: 18, passing: 15, physical: 15, stamina: 10 },
+    CM:  { passing: 20, stamina: 15, dribbling: 10, defending: 5 },
+    CAM: { passing: 20, dribbling: 18, shooting: 12, defending: -10 },
+    LW:  { pace: 22, dribbling: 18, shooting: 10, defending: -15 },
+    RW:  { pace: 22, dribbling: 18, shooting: 10, defending: -15 },
+    ST:  { shooting: 25, physical: 12, pace: 10, defending: -20 },
+    CF:  { shooting: 20, dribbling: 15, passing: 12, defending: -15 },
+  };
+
+  const styleBoosts: Record<string, Record<string, number>> = {
+    defensive:      { defending: 8, physical: 5, shooting: -5 },
+    attacking:      { shooting: 8, pace: 5, defending: -5 },
+    possession:     { passing: 10, dribbling: 6, pace: -4 },
+    'counter-attack': { pace: 10, stamina: 5, passing: 3 },
+    balanced:       { passing: 3, defending: 3, dribbling: 3 },
+  };
+
+  for (const [stat, boost] of Object.entries(positionBoosts[player.position] || {})) {
+    stats[stat] = (stats[stat] || 0) + boost;
+  }
+
+  for (const [stat, boost] of Object.entries(styleBoosts[player.playingStyle] || {})) {
+    stats[stat] = (stats[stat] || 0) + boost;
+  }
+
+  if (player.age <= 22) {
+    stats.pace += 5;
+    stats.dribbling += 3;
+  } else if (player.age >= 33) {
+    stats.pace -= 5;
+    stats.physical += 4;
+    stats.defending += 3;
+  } else if (player.age >= 30) {
+    stats.pace -= 3;
+    stats.physical += 2;
+  }
+
+  if (bmi >= 18.5 && bmi <= 24.9) {
+    stats.pace += 4;
+    stats.stamina += 3;
+  } else if (bmi > 28) {
+    stats.pace -= 6;
+    stats.stamina -= 3;
+  } else if (bmi > 26) {
+    stats.pace -= 3;
+  }
+
+  const goalkeeping = player.position === 'GK' ? clamp(70 + player.weeklyActivity * 1.5, 40, 95) : null;
+
+  return {
+    pace: clamp(stats.pace, 40, 95),
+    shooting: clamp(stats.shooting, 40, 95),
+    passing: clamp(stats.passing, 40, 95),
+    dribbling: clamp(stats.dribbling, 40, 95),
+    defending: clamp(stats.defending, 40, 95),
+    physical: clamp(stats.physical, 40, 95),
+    goalkeeping,
+    stamina: clamp(stats.stamina, 40, 95),
+    bmi: Math.round(bmi * 10) / 10,
+  };
+}
+
+function buildPrompt(player: PlayerInput, base: BaseStats): string {
+  return `You are a lead scout for eFootball. You are given a player's profile and pre-calculated baseline stats.
+
+INPUT DATA:
+- Player Age: ${player.age}, Pos: ${player.position}, Style: ${player.playingStyle}, BMI: ${base.bmi}
+- BASELINE STATS: PAC ${base.pace}, SHO ${base.shooting}, PAS ${base.passing}, DRI ${base.dribbling}, DEF ${base.defending}, PHY ${base.physical}, STA ${base.stamina}${base.goalkeeping != null ? `, GK ${base.goalkeeping}` : ''}
+
+YOUR TASK:
+1. STAT FINE-TUNING: Adjust the baseline stats by a maximum of ±4 points based on age and holistic playstyle synergy. Ensure the primary stat for the position remains the highest.
+2. OVERALL RATING (OVR): Calculate a single weighted OVR (50-99) using these exact positional weights:
+
+OVR FORMULA (multiply each stat by its weight, sum, then apply age factor):
+- GK:  goalkeeping×0.50 + physical×0.10 + pace×0.10 + passing×0.10 + stamina×0.20
+- CB:  pace×0.08 + shooting×0.05 + passing×0.08 + dribbling×0.04 + defending×0.35 + physical×0.25 + stamina×0.15
+- LB/RB: pace×0.15 + shooting×0.05 + passing×0.12 + dribbling×0.12 + defending×0.20 + physical×0.15 + stamina×0.21
+- CDM: pace×0.08 + shooting×0.05 + passing×0.15 + dribbling×0.08 + defending×0.30 + physical×0.18 + stamina×0.16
+- CM:  pace×0.08 + shooting×0.12 + passing×0.20 + dribbling×0.15 + defending×0.12 + physical×0.12 + stamina×0.21
+- CAM: pace×0.12 + shooting×0.15 + passing×0.20 + dribbling×0.20 + defending×0.04 + physical×0.08 + stamina×0.21
+- LW/RW: pace×0.20 + shooting×0.12 + passing×0.12 + dribbling×0.20 + defending×0.04 + physical×0.12 + stamina×0.20
+- ST:  pace×0.15 + shooting×0.25 + passing×0.08 + dribbling×0.15 + defending×0.00 + physical×0.17 + stamina×0.20
+- CF:  pace×0.12 + shooting×0.20 + passing×0.12 + dribbling×0.15 + defending×0.04 + physical×0.17 + stamina×0.20
+
+AGE FACTOR: multiply OVR by 1.02 (age≤24), 1.0 (25-29), 0.97 (30-32), or 0.93 (33+).
+
+3. ARCHETYPE: Assign a sharp 3-word title (e.g., "Relentless Wing Back", "Surgical Playmaker", "Anchor Defender").
+
+STRICT RULES:
+- Do NOT output default 50s.
+- Stats must stay within 40-99 range.
+- The primary stat for the position MUST be the highest among the 7 field stats (pace/shooting/passing/dribbling/defending/physical/stamina).
+- Return strictly valid JSON.
+
+OUTPUT FORMAT:
 {
-  "bmi": float (rounded to 1 decimal),
   "ovr": int,
   "pace": int,
   "shooting": int,
   "passing": int,
   "dribbling": int,
   "defending": int,
-  "physicality": int,
+  "physical": int,
   "stamina": int,
-  "archetype": "string (e.g., 'Box-to-Box Engine', 'Clinical Finisher', 'Rock-Solid Stopper', 'Speedster Winger', 'Playmaker')"
+  "archetype": "string"
 }`;
 }
 
@@ -110,66 +211,23 @@ function getArchetype(position: string, playingStyle: string): string {
   return archetypes[position]?.[playingStyle] || 'All-Rounder';
 }
 
-function generateStatsLocally(player: PlayerInput): GeneratedStats {
-  const bmi = player.weight / Math.pow(player.height / 100, 2);
-
-  let pace = player.age <= 25 ? 72 : player.age <= 32 ? 67 : 58;
-  if (bmi >= 18.5 && bmi <= 24.9) pace += 5;
-  else if (bmi > 28) pace -= 5;
-
-  let stamina = 50 + player.weeklyActivity * 3.5;
-  if (player.age <= 25) stamina += 3;
-  else if (player.age > 32) stamina -= 3;
-  stamina = Math.min(95, Math.max(40, stamina));
-
-  let physical = 50 + (player.height > 180 ? 5 : 0) + (player.weight > 80 ? 3 : 0);
-  if (bmi > 28) physical += 3;
-
-  let shooting = 55;
-  let passing = 55;
-  let dribbling = 55;
-  let defending = 55;
-
-  switch (player.position) {
-    case 'ST': case 'CF': shooting += 12; pace += 5; break;
-    case 'LW': case 'RW': pace += 10; dribbling += 8; break;
-    case 'CAM': passing += 10; dribbling += 8; break;
-    case 'CM': passing += 8; stamina += 5; break;
-    case 'CDM': defending += 10; physical += 5; break;
-    case 'CB': defending += 12; physical += 8; break;
-    case 'LB': case 'RB': pace += 5; defending += 8; stamina += 5; break;
-    case 'GK': defending += 15; shooting -= 10; dribbling -= 10; break;
-  }
-
-  switch (player.playingStyle) {
-    case 'attacking': pace += 5; shooting += 5; break;
-    case 'possession': passing += 5; dribbling += 5; break;
-    case 'defensive': defending += 5; physical += 5; break;
-    case 'balanced': physical += 3; stamina += 3; break;
-    case 'counter-attack': pace += 5; shooting += 3; break;
-  }
-
-  const overall = Math.round((pace * 0.15 + shooting * 0.15 + passing * 0.15 + dribbling * 0.15 + defending * 0.2 + physical * 0.1 + stamina * 0.1) *
-    (player.age <= 24 ? 1.02 : player.age <= 29 ? 1.0 : player.age <= 32 ? 0.97 : 0.93));
-
-  return {
-    pace: clampStat(pace),
-    shooting: clampStat(shooting),
-    passing: clampStat(passing),
-    dribbling: clampStat(dribbling),
-    defending: clampStat(defending),
-    physical: clampStat(physical),
-    goalkeeping: player.position === 'GK' ? clampStat(70 + player.weeklyActivity * 1.5) : null,
-    stamina: clampStat(stamina),
-    archetype: getArchetype(player.position, player.playingStyle),
-    overall: clampStat(overall),
-  };
-}
-
 export async function generatePlayerStats(player: PlayerInput): Promise<GeneratedStats> {
+  const base = calculateBaseStats(player);
+
   if (!OPENROUTER_API_KEY) {
-    console.warn('OPENROUTER_API_KEY not set, using local stat generation');
-    return generateStatsLocally(player);
+    console.warn('OPENROUTER_API_KEY not set, using deterministic base stats');
+    return {
+      pace: base.pace,
+      shooting: base.shooting,
+      passing: base.passing,
+      dribbling: base.dribbling,
+      defending: base.defending,
+      physical: base.physical,
+      goalkeeping: base.goalkeeping,
+      stamina: base.stamina,
+      archetype: getArchetype(player.position, player.playingStyle),
+      overall: 50,
+    };
   }
 
   try {
@@ -186,7 +244,7 @@ export async function generatePlayerStats(player: PlayerInput): Promise<Generate
         messages: [
           {
             role: 'user',
-            content: buildPrompt(player),
+            content: buildPrompt(player, base),
           },
         ],
         temperature: 0.3,
@@ -196,25 +254,69 @@ export async function generatePlayerStats(player: PlayerInput): Promise<Generate
 
     if (!response.ok) {
       console.error(`OpenRouter API error: ${response.status}`);
-      return generateStatsLocally(player);
+      return {
+        pace: base.pace,
+        shooting: base.shooting,
+        passing: base.passing,
+        dribbling: base.dribbling,
+        defending: base.defending,
+        physical: base.physical,
+        goalkeeping: base.goalkeeping,
+        stamina: base.stamina,
+        archetype: getArchetype(player.position, player.playingStyle),
+        overall: 50,
+      };
     }
 
     const data = await response.json();
     const content = data.choices?.[0]?.message?.content;
     if (!content) {
       console.error('No content in OpenRouter response');
-      return generateStatsLocally(player);
+      return {
+        pace: base.pace,
+        shooting: base.shooting,
+        passing: base.passing,
+        dribbling: base.dribbling,
+        defending: base.defending,
+        physical: base.physical,
+        goalkeeping: base.goalkeeping,
+        stamina: base.stamina,
+        archetype: getArchetype(player.position, player.playingStyle),
+        overall: 50,
+      };
     }
 
     const stats = parseLLMResponse(content);
     if (!stats) {
       console.error('Failed to parse LLM response:', content);
-      return generateStatsLocally(player);
+      return {
+        pace: base.pace,
+        shooting: base.shooting,
+        passing: base.passing,
+        dribbling: base.dribbling,
+        defending: base.defending,
+        physical: base.physical,
+        goalkeeping: base.goalkeeping,
+        stamina: base.stamina,
+        archetype: getArchetype(player.position, player.playingStyle),
+        overall: 50,
+      };
     }
 
     return stats;
   } catch (err) {
-    console.error('LLM generation failed, falling back to local:', err);
-    return generateStatsLocally(player);
+    console.error('LLM generation failed, using deterministic base stats:', err);
+    return {
+      pace: base.pace,
+      shooting: base.shooting,
+      passing: base.passing,
+      dribbling: base.dribbling,
+      defending: base.defending,
+      physical: base.physical,
+      goalkeeping: base.goalkeeping,
+      stamina: base.stamina,
+      archetype: getArchetype(player.position, player.playingStyle),
+      overall: 50,
+    };
   }
 }
