@@ -116,7 +116,7 @@ router.post('/', authMiddleware, async (req: AuthRequest, res) => {
   }
 });
 
-router.put('/:id', authMiddleware, (req: AuthRequest, res) => {
+router.put('/:id', authMiddleware, async (req: AuthRequest, res) => {
   try {
     const existing = db.prepare('SELECT * FROM players WHERE id = ?').get(req.params.id) as any;
     if (!existing) return res.status(404).json({ error: 'Player not found' });
@@ -129,21 +129,50 @@ router.put('/:id', authMiddleware, (req: AuthRequest, res) => {
     if (avatarUrl !== undefined && !isValidAvatarUrl(avatarUrl)) {
       return res.status(400).json({ error: 'Invalid photo URL. Must start with http:// or https://' });
     }
-    const row = {
-      pace: skillRatings?.pace ?? existing.pace,
-      shooting: skillRatings?.shooting ?? existing.shooting,
-      passing: skillRatings?.passing ?? existing.passing,
-      dribbling: skillRatings?.dribbling ?? existing.dribbling,
-      defending: skillRatings?.defending ?? existing.defending,
-      physical: skillRatings?.physical ?? existing.physical,
-      goalkeeping: skillRatings?.goalkeeping ?? existing.goalkeeping,
-      stamina: skillRatings?.stamina ?? existing.stamina,
-      position: position || existing.position,
-      age: age ?? existing.age,
-      weeklyActivity: weeklyActivity ?? existing.weeklyActivity,
-    };
+    let row;
+    let generatedArchetype = existing.archetype;
+    if (skillRatings?.pace != null) {
+      row = {
+        pace: skillRatings.pace || 50,
+        shooting: skillRatings.shooting || 50,
+        passing: skillRatings.passing || 50,
+        dribbling: skillRatings.dribbling || 50,
+        defending: skillRatings.defending || 50,
+        physical: skillRatings.physical || 50,
+        goalkeeping: skillRatings.goalkeeping,
+        stamina: skillRatings.stamina || 50,
+        position: position || existing.position,
+        age: age ?? existing.age,
+        weeklyActivity: weeklyActivity ?? existing.weeklyActivity,
+      };
+      generatedArchetype = skillRatings.archetype || existing.archetype;
+    } else {
+      const updatedPlayer = {
+        age: age ?? existing.age,
+        height: height ?? existing.height,
+        weight: weight ?? existing.weight,
+        position: position || existing.position,
+        playingStyle: playingStyle || existing.playingStyle,
+        weeklyActivity: weeklyActivity ?? existing.weeklyActivity,
+      };
+      const regenerated = await generatePlayerStats(updatedPlayer);
+      generatedArchetype = regenerated.archetype;
+      row = {
+        pace: regenerated.pace,
+        shooting: regenerated.shooting,
+        passing: regenerated.passing,
+        dribbling: regenerated.dribbling,
+        defending: regenerated.defending,
+        physical: regenerated.physical,
+        goalkeeping: regenerated.goalkeeping,
+        stamina: regenerated.stamina,
+        position: updatedPlayer.position,
+        age: updatedPlayer.age,
+        weeklyActivity: updatedPlayer.weeklyActivity,
+      };
+    }
     const overall = req.user!.role === 'admin' && adminOverall != null ? Math.min(99, Math.max(1, Number(adminOverall))) : calcOverall(row);
-    const archetype = adminArchetype || existing.archetype;
+    const archetype = adminArchetype || generatedArchetype;
 
     db.prepare(`
       UPDATE players SET name=?, age=?, height=?, weight=?, position=?, playingStyle=?,

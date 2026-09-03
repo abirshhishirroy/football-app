@@ -45,7 +45,7 @@ function calculateBaseStats(player: PlayerInput): BaseStats {
 
   const stats: Record<string, number> = {
     pace: 60,
-    shooting: 50,
+    shooting: 58,
     passing: 55,
     dribbling: 55,
     defending: 50,
