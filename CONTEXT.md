@@ -243,8 +243,8 @@ Custom color tokens defined in `src/index.css` via `@theme` block:
 |----------|----------|---------|-------------|
 | `PORT` | No | `3001` | Server port |
 | `JWT_SECRET` | Yes* | None | JWT signing secret (*required in production, development uses fallback) |
-| `ADMIN_EMAIL` | No | `admin@football.com` | Admin account email |
-| `ADMIN_PASSWORD` | No | `admin123` | Admin account password |
+| `ADMIN_EMAIL` | No | `********` | Admin account email |
+| `ADMIN_PASSWORD` | No | `********` | Admin account password |
 | `OPENROUTER_API_KEY` | No | `null` | OpenRouter API key for LLM stat generation (falls back to local generation) |
 | `CLOUDINARY_CLOUD_NAME` | No | `null` | Cloudinary cloud name for memory uploads |
 | `CLOUDINARY_API_KEY` | No | `null` | Cloudinary API key |
